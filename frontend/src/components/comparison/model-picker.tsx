@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Check, X } from "lucide-react";
 
 import type { Model } from "@/lib/api/types";
@@ -36,11 +35,6 @@ export function ModelPicker({
   unavailableProviderKeys,
   onChange,
 }: ModelPickerProps) {
-  useEffect(() => {
-    console.log("[ModelPicker] props.models", models);
-    console.log("[ModelPicker] isArray", Array.isArray(models), "length", models?.length);
-  }, [models]);
-
   const available = models.filter((m) => !m.is_placeholder);
 
   const toggle = (model: Model) => {
