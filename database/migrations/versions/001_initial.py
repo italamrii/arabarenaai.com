@@ -212,7 +212,7 @@ def _seed() -> None:
         ("openai", "gpt-4o", "GPT-4o", "GPT-4o", 1, False),
         ("openai", "gpt-4o-mini", "GPT-4o Mini", "GPT-4o Mini", 2, False),
         ("anthropic", "claude-sonnet-4-6", "Claude Sonnet 4.6", "Claude Sonnet 4.6", 3, False),
-        ("google", "gemini-1.5-pro", "Gemini 1.5 Pro", "Gemini 1.5 Pro", 4, False),
+        ("google", "gemini-2.5-flash", "Gemini 2.5 Flash", "Gemini 2.5 Flash", 4, False),
         ("deepseek", "deepseek-chat", "DeepSeek Chat", "DeepSeek Chat", 5, False),
         ("qwen", "qwen-plus", "Qwen Plus", "Qwen Plus", 6, False),
         ("xai", "grok-beta", "Grok", "Grok", 7, False),
