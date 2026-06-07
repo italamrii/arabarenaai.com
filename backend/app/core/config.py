@@ -127,7 +127,7 @@ class Settings(BaseSettings):
     max_models_per_comparison: int = 4
     min_models_per_comparison: int = 2
     max_prompt_chars: int = 1000
-    provider_max_tokens: int = 800
+    provider_max_tokens: int = 1600
 
 
 
