@@ -8,13 +8,13 @@ import { PageSkeleton } from "@/components/shared/loading-skeletons";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useModels } from "@/hooks/use-models";
+import { normalizeModelsQueryData, useModels } from "@/hooks/use-models";
 import type { Model } from "@/lib/api/types";
 import { ar } from "@/i18n/ar";
 
 export default function ModelsPage() {
   const { data: modelsData, isLoading } = useModels();
-  const models = modelsData?.models;
+  const models = normalizeModelsQueryData(modelsData).models;
 
   if (isLoading) {
     return (

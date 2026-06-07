@@ -132,11 +132,16 @@ export const api = {
     const res = await client.get<ApiEnvelope<{ models: Model[] }>>("/models", {
       params: { enabled_only: true },
     });
+    console.log("[api.getModelsFull] raw models response", res.data);
     const { payload, meta } = readEnvelope(res);
-    return {
-      models: payload.models,
-      meta,
-    };
+    const models = Array.isArray(payload?.models) ? payload.models : [];
+    const parsed = { models, meta };
+    console.log("[api.getModelsFull] parsed modelsData", parsed);
+    console.log("[api.getModelsFull] modelsData.models length", models.length);
+    if (models.length === 0) {
+      console.warn("[api.getModelsFull] no models in envelope payload", { payload, meta });
+    }
+    return parsed;
   },
 
   getModels(): Promise<Model[]> {

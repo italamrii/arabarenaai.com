@@ -15,7 +15,7 @@ import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategories, useCategoryDetect } from "@/hooks/use-categories";
-import { useModels, useProviderHealth } from "@/hooks/use-models";
+import { normalizeModelsQueryData, useModels, useProviderHealth } from "@/hooks/use-models";
 import { useCreateComparison } from "@/hooks/use-comparison";
 import { ApiClientError } from "@/lib/api/client";
 import { ar } from "@/i18n/ar";
@@ -31,18 +31,75 @@ export default function ComparePage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const { data: categoriesData, isLoading: loadingCategories } = useCategories();
-  const {
-    data: modelsData,
-    isLoading: loadingModels,
-    isError: modelsError,
-  } = useModels();
-  const { data: providerHealthProviders } = useProviderHealth();
+  const modelsQuery = useModels();
+  const providerHealthQuery = useProviderHealth();
   const detectQuery = useCategoryDetect(prompt, autoDetect);
   const createMutation = useCreateComparison();
 
-  const models = modelsData?.models;
-  const minSelection = modelsData?.meta?.min_selection ?? 2;
-  const maxSelection = modelsData?.meta?.max_selection ?? 10;
+  const {
+    data: modelsData,
+    isLoading: loadingModels,
+    isError: modelsQueryError,
+    error: modelsQueryErrorObj,
+  } = modelsQuery;
+  const {
+    data: providerHealthProviders,
+    isError: providerHealthQueryError,
+    error: providerHealthQueryErrorObj,
+  } = providerHealthQuery;
+
+  const normalizedModelsData = normalizeModelsQueryData(modelsData);
+  const models = normalizedModelsData.models;
+  const minSelection = normalizedModelsData.meta?.min_selection ?? 2;
+  const maxSelection = normalizedModelsData.meta?.max_selection ?? 10;
+
+  // Only the models query may trigger the Arabic load error — never provider health.
+  const showModelsLoadError = modelsQueryError;
+  const showModelsEmptyMessage =
+    modelsQuery.isSuccess && !loadingModels && models.length === 0;
+
+  useEffect(() => {
+    console.log("[ComparePage] models query", {
+      isLoading: modelsQuery.isLoading,
+      isError: modelsQuery.isError,
+      isSuccess: modelsQuery.isSuccess,
+      error: modelsQueryErrorObj,
+      data: modelsData,
+    });
+    console.log("[ComparePage] parsed modelsData", normalizedModelsData);
+    console.log("[ComparePage] modelsData.models", models);
+    console.log("[ComparePage] provider health query", {
+      isLoading: providerHealthQuery.isLoading,
+      isError: providerHealthQuery.isError,
+      isSuccess: providerHealthQuery.isSuccess,
+      error: providerHealthQueryErrorObj,
+      data: providerHealthProviders,
+    });
+    console.log("[ComparePage] error render conditions", {
+      showModelsLoadError,
+      showModelsEmptyMessage,
+      showModelPicker: models.length > 0,
+      modelsQueryErrorOnly: modelsQueryError,
+      providerHealthQueryErrorIgnored: providerHealthQueryError,
+    });
+  }, [
+    models,
+    modelsData,
+    modelsQuery.isLoading,
+    modelsQuery.isError,
+    modelsQuery.isSuccess,
+    modelsQueryErrorObj,
+    normalizedModelsData,
+    providerHealthProviders,
+    providerHealthQuery.isLoading,
+    providerHealthQuery.isError,
+    providerHealthQuery.isSuccess,
+    providerHealthQueryError,
+    providerHealthQueryErrorObj,
+    modelsQueryError,
+    showModelsEmptyMessage,
+    showModelsLoadError,
+  ]);
 
   const unavailableProviderKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -71,15 +128,16 @@ export default function ComparePage() {
   const hasEnoughModels = selectedModelIds.length >= minSelection;
   const hasCategory = autoDetect || !!categoryKey;
 
-  const isReady = hasPrompt && hasEnoughModels && hasCategory && !modelsError && !!models;
+  const isReady =
+    hasPrompt && hasEnoughModels && hasCategory && !showModelsLoadError && models.length > 0;
 
   const statusMessage = useMemo(() => {
     if (!hasPrompt) return ar.compare.needsPrompt;
-    if (modelsError) return ar.compare.modelsLoadError;
+    if (showModelsLoadError) return ar.compare.modelsLoadError;
     if (!hasEnoughModels) return ar.compare.needsModels;
     if (!hasCategory) return ar.compare.needsCategory;
     return ar.compare.readyToCompare;
-  }, [hasPrompt, hasEnoughModels, hasCategory, modelsError]);
+  }, [hasPrompt, hasEnoughModels, hasCategory, showModelsLoadError]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -199,14 +257,14 @@ export default function ComparePage() {
                   </div>
                 )}
 
-                {modelsError && (
+                {showModelsLoadError && (
                   <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     {ar.compare.modelsLoadError}
                   </div>
                 )}
 
-                {models && models.length > 0 && (
+                {models.length > 0 && (
                   <ModelPicker
                     models={models}
                     selectedIds={selectedModelIds}
@@ -217,7 +275,7 @@ export default function ComparePage() {
                   />
                 )}
 
-                {models && models.length === 0 && !loadingModels && (
+                {showModelsEmptyMessage && (
                   <p className="text-sm text-muted-foreground">{ar.compare.modelsLoadError}</p>
                 )}
               </div>
