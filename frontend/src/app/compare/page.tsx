@@ -36,7 +36,7 @@ export default function ComparePage() {
     isLoading: loadingModels,
     isError: modelsError,
   } = useModels();
-  const { data: providerHealth } = useProviderHealth();
+  const { data: providerHealthProviders } = useProviderHealth();
   const detectQuery = useCategoryDetect(prompt, autoDetect);
   const createMutation = useCreateComparison();
 
@@ -46,13 +46,13 @@ export default function ComparePage() {
 
   const unavailableProviderKeys = useMemo(() => {
     const keys = new Set<string>();
-    for (const provider of providerHealth?.providers ?? []) {
+    for (const provider of providerHealthProviders ?? []) {
       if (provider.status !== "healthy") {
         keys.add(provider.key);
       }
     }
     return keys;
-  }, [providerHealth]);
+  }, [providerHealthProviders]);
 
   useEffect(() => {
     if (categoriesData?.defaultKey && categoryKey === null && !autoDetect) {

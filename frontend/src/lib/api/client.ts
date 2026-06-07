@@ -5,6 +5,7 @@ import { getSessionId, setSessionId, clearSessionId, isValidSessionId } from "@/
 import type {
   ApiEnvelope,
   ApiErrorEnvelope,
+  ApiMeta,
   Category,
   CategoryDetectResult,
   Comparison,
@@ -14,6 +15,7 @@ import type {
   PreferencesData,
   PreferencesSummaryData,
   ProviderHealthData,
+  ProviderHealthItem,
   SessionData,
   Vote,
 } from "@/lib/api/types";
@@ -86,6 +88,14 @@ async function unwrap<T>(promise: Promise<{ data: ApiEnvelope<T> }>): Promise<T>
   return data.data;
 }
 
+/** Read backend envelope: axios response.data → { data, meta }. */
+function readEnvelope<T>(response: { data: ApiEnvelope<T> }): { payload: T; meta?: ApiMeta } {
+  return {
+    payload: response.data.data,
+    meta: response.data.meta,
+  };
+}
+
 export const api = {
   async ensureSession(): Promise<string> {
     const existing = getSessionId();
@@ -100,18 +110,17 @@ export const api = {
     return session.session_id;
   },
 
-  getCategories(): Promise<{ categories: Category[]; default_key?: string; supports_auto_detect?: boolean }> {
-    return unwrap(client.get("/categories")).then((data) => ({
-      categories: (data as { categories: Category[] }).categories,
-      default_key: (data as { categories: Category[] }).categories ? "general" : undefined,
-    }));
+  async getCategories(): Promise<Category[]> {
+    const res = await client.get<ApiEnvelope<{ categories: Category[] }>>("/categories");
+    return readEnvelope(res).payload.categories;
   },
 
   async getCategoriesFull() {
     const res = await client.get<ApiEnvelope<{ categories: Category[] }>>("/categories");
+    const { payload, meta } = readEnvelope(res);
     return {
-      categories: res.data.data.categories,
-      meta: res.data.meta,
+      categories: payload.categories,
+      meta,
     };
   },
 
@@ -123,9 +132,10 @@ export const api = {
     const res = await client.get<ApiEnvelope<{ models: Model[] }>>("/models", {
       params: { enabled_only: true },
     });
+    const { payload, meta } = readEnvelope(res);
     return {
-      models: res.data.data.models,
-      meta: res.data.meta,
+      models: payload.models,
+      meta,
     };
   },
 
@@ -177,10 +187,12 @@ export const api = {
     return unwrap(client.get("/health"));
   },
 
-  /** Optional ops data — failures must not block model/category UI. */
-  async getProviderHealth(): Promise<ProviderHealthData | null> {
+  /** Optional warning data — failures must not block model/category UI. */
+  async getProviderHealth(): Promise<ProviderHealthItem[] | null> {
     try {
-      return await unwrap(client.get<ApiEnvelope<ProviderHealthData>>("/health/providers"));
+      const res = await client.get<ApiEnvelope<ProviderHealthData>>("/health/providers");
+      const providers = readEnvelope(res).payload.providers;
+      return Array.isArray(providers) ? providers : null;
     } catch {
       return null;
     }
