@@ -177,8 +177,13 @@ export const api = {
     return unwrap(client.get("/health"));
   },
 
-  getProviderHealth(): Promise<ProviderHealthData> {
-    return unwrap(client.get("/health/providers"));
+  /** Optional ops data — failures must not block model/category UI. */
+  async getProviderHealth(): Promise<ProviderHealthData | null> {
+    try {
+      return await unwrap(client.get<ApiEnvelope<ProviderHealthData>>("/health/providers"));
+    } catch {
+      return null;
+    }
   },
 };
 

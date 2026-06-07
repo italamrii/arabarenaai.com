@@ -16,6 +16,7 @@ export function useProviderHealth() {
     queryKey: ["provider-health"],
     queryFn: () => api.getProviderHealth(),
     staleTime: 60_000,
+    retry: false,
   });
 }
 
