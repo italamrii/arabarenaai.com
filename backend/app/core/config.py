@@ -50,8 +50,13 @@ def _bootstrap_env() -> Path:
 
 ENV_FILE = _bootstrap_env()
 
-
-
+# Always allowed in addition to CORS_ORIGINS env (local dev + production custom domain).
+_BASE_CORS_ORIGINS: tuple[str, ...] = (
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://arabarenaai.com",
+    "https://www.arabarenaai.com",
+)
 
 
 class Settings(BaseSettings):
@@ -76,7 +81,7 @@ class Settings(BaseSettings):
 
     app_version: str = "1.0.0"
 
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
 
 
@@ -181,8 +186,16 @@ class Settings(BaseSettings):
     @property
 
     def cors_origin_list(self) -> list[str]:
-
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        from_env = [
+            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+        ]
+        merged: list[str] = []
+        seen: set[str] = set()
+        for origin in (*_BASE_CORS_ORIGINS, *from_env):
+            if origin not in seen:
+                seen.add(origin)
+                merged.append(origin)
+        return merged
 
 
 
