@@ -68,7 +68,7 @@ export const ar = {
     selectPopular: "تحديد الأكثر شيوعًا",
     modelsLoadError: "تعذّر تحميل النماذج. تحقق من الاتصال بالخادم وحاول مرة أخرى.",
     modelsLoading: "جاري تحميل النماذج...",
-    providerUnavailable: "المزود غير متاح حالياً",
+    providerUnavailable: "غير متاح حالياً",
     guide: {
       title: "كيف تبدأ المقارنة",
       steps: [

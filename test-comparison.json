@@ -1,0 +1,9 @@
+﻿{
+  "prompt": "اكتب تغريدة قصيرة عن الذكاء الاصطناعي بالعربية",
+  "category_mode": "manual",
+  "category_key": "general",
+  "model_ids": [
+    "da821d7c-0903-4681-be3b-8d4e7610b1f0",
+    "d3b9df37-bf40-49ca-a8e2-6f7dbbfd106e"
+  ]
+}

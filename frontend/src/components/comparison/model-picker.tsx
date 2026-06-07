@@ -25,6 +25,7 @@ interface ModelPickerProps {
   min?: number;
   max?: number;
   unavailableProviderKeys?: Set<string>;
+  unavailableProviderMessages?: Readonly<Record<string, string>>;
   onChange: (ids: string[]) => void;
 }
 
@@ -34,12 +35,16 @@ export const ModelPicker = memo(function ModelPicker({
   min = 2,
   max = 10,
   unavailableProviderKeys,
+  unavailableProviderMessages,
   onChange,
 }: ModelPickerProps) {
-  const available = models.filter((m) => !m.is_placeholder);
+  const isSelectable = (model: Model) =>
+    !model.is_placeholder && !unavailableProviderKeys?.has(model.provider.key);
+
+  const available = models.filter(isSelectable);
 
   const toggle = (model: Model) => {
-    if (model.is_placeholder) return;
+    if (!isSelectable(model)) return;
     if (selectedIds.includes(model.id)) {
       onChange(selectedIds.filter((id) => id !== model.id));
     } else if (selectedIds.length < max) {
@@ -102,31 +107,36 @@ export const ModelPicker = memo(function ModelPicker({
               {providerModels.map((model) => {
                 const selected = selectedIds.includes(model.id);
                 const atMax = !selected && selectedIds.length >= max;
-                const disabled = model.is_placeholder || atMax;
                 const providerUnavailable =
                   !model.is_placeholder &&
                   unavailableProviderKeys?.has(model.provider.key) === true;
+                const disabled = model.is_placeholder || providerUnavailable || atMax;
+                const providerMessage = unavailableProviderMessages?.[model.provider.key];
 
                 return (
                   <button
                     key={model.id}
                     type="button"
-                    disabled={disabled && !model.is_placeholder}
+                    disabled={disabled}
                     onClick={() => toggle(model)}
                     aria-pressed={selected}
-                    aria-label={`${model.name_ar}${selected ? `، ${ar.compare.selected}` : ""}`}
+                    aria-disabled={disabled}
+                    aria-label={`${model.name_ar}${
+                      providerUnavailable ? `، ${ar.compare.providerUnavailable}` : ""
+                    }${selected ? `، ${ar.compare.selected}` : ""}`}
                     className={cn(
                       "group relative flex items-center gap-3 rounded-xl border p-3.5 text-start transition-all duration-200",
                       "bg-gradient-to-br",
                       model.is_placeholder && "opacity-45 cursor-not-allowed border-border/40 from-transparent",
-                      !model.is_placeholder && !selected && !disabled && [
+                      providerUnavailable && "opacity-45 cursor-not-allowed border-border/40 from-transparent",
+                      !model.is_placeholder && !providerUnavailable && !selected && !disabled && [
                         colorClass,
                         "hover:scale-[1.01] hover:border-accent/50",
                       ],
-                      !model.is_placeholder && selected && [
+                      !model.is_placeholder && !providerUnavailable && selected && [
                         "border-accent bg-accent/15 ring-1 ring-accent/40 glow-accent scale-[1.01]",
                       ],
-                      atMax && !selected && "opacity-35 cursor-not-allowed",
+                      atMax && !selected && !providerUnavailable && !model.is_placeholder && "opacity-35 cursor-not-allowed",
                     )}
                   >
                     <div
@@ -145,12 +155,17 @@ export const ModelPicker = memo(function ModelPicker({
                         </Badge>
                       )}
                       {providerUnavailable && (
-                        <Badge
-                          variant="outline"
-                          className="mt-1 text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400"
-                        >
-                          {ar.compare.providerUnavailable}
-                        </Badge>
+                        <div className="mt-1 space-y-0.5">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400"
+                          >
+                            {ar.compare.providerUnavailable}
+                          </Badge>
+                          {providerMessage ? (
+                            <p className="text-[10px] text-muted-foreground leading-snug">{providerMessage}</p>
+                          ) : null}
+                        </div>
                       )}
                     </div>
                   </button>

@@ -1,0 +1,9 @@
+﻿{
+  "prompt": "اكتب جملة عربية قصيرة عن التقنية",
+  "category_mode": "manual",
+  "category_key": "general",
+  "model_ids": [
+    "2fc72403-0717-4008-89dd-0db37b6cbbe2",
+    "da821d7c-0903-4681-be3b-8d4e7610b1f0"
+  ]
+}
