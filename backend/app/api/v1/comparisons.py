@@ -14,6 +14,7 @@ from app.schemas.comparison import ComparisonCreateRequest, ComparisonCreatedOut
 from app.services.comparison_service import ComparisonService
 from app.services.mappers import comparison_created_out, comparison_out
 from app.services.vote_service import VoteService
+from app.observability.logging_config import log_event
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
