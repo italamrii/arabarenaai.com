@@ -15,8 +15,8 @@ const arabicFont = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Arab Benchmark AI — مقارنة النماذج بالعربية",
-  description: "منصة عربية-first لمقارنة نماذج الذكاء الاصطناعي وإشارات تفضيل المجتمع",
+  title: "ArabArenaAI — مقارنة النماذج بالعربية",
+  description: "منصة ArabArenaAI لمقارنة نماذج الذكاء الاصطناعي وإشارات تفضيل المجتمع",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

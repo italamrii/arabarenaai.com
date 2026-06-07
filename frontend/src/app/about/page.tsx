@@ -14,6 +14,16 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>{ar.about.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground leading-relaxed">{ar.about.intro.paragraph1}</p>
+            <p className="text-muted-foreground leading-relaxed">{ar.about.intro.paragraph2}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>{ar.about.mission.title}</CardTitle>
           </CardHeader>
           <CardContent>

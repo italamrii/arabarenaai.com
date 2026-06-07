@@ -26,9 +26,10 @@ export function Footer() {
           </div>
         </div>
         <Separator className="my-6" />
-        <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} {ar.brand}. {ar.footer.rights}.
-        </p>
+        <div className="space-y-3 text-xs text-muted-foreground text-center max-w-3xl mx-auto">
+          <p>{ar.footer.rights}</p>
+          <p className="leading-relaxed">{ar.footer.disclaimer}</p>
+        </div>
       </Container>
     </footer>
   );

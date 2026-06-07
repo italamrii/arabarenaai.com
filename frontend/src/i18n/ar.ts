@@ -1,5 +1,5 @@
 export const ar = {
-  brand: "Arab Benchmark AI",
+  brand: "ArabArenaAI",
   brandTagline: "مقارنة النماذج الذكية بالعربية",
   nav: {
     home: "الرئيسية",
@@ -107,10 +107,16 @@ export const ar = {
     available: "متاح",
   },
   about: {
-    title: "عن Arab Benchmark AI",
+    title: "عن ArabArenaAI",
+    intro: {
+      paragraph1:
+        "ArabArenaAI منصة مستقلة تساعد المستخدم على مقارنة ردود نماذج الذكاء الاصطناعي من عدة مزودين في مكان واحد، بهدف تسهيل اختيار الإجابة الأنسب بسرعة ووضوح.",
+      paragraph2:
+        "يدير المشروع Abdullah Alamri، ويركز على تجربة المستخدم، جودة المقارنة، وتحسين الوصول إلى أدوات الذكاء الاصطناعي باللغة العربية.",
+    },
     mission: {
       title: "رسالتنا",
-      body: "Arab Benchmark AI منصة عربية-first لمقارنة نماذج الذكاء الاصطناعي على موجهات حقيقية باللغة العربية. نجمع تفضيلات المجتمع بشفافية — دون ادّعاءات رسمية عن تفوق نموذج على آخر.",
+      body: "ArabArenaAI منصة عربية-first لمقارنة نماذج الذكاء الاصطناعي على موجهات حقيقية باللغة العربية. نجمع تفضيلات المجتمع بشفافية — دون ادّعاءات رسمية عن تفوق نموذج على آخر.",
     },
     methodology: {
       title: "المنهجية",
@@ -128,7 +134,30 @@ export const ar = {
   },
   footer: {
     tagline: "مقارنة شفافة · إشارات مجتمعية · عربي أولًا",
-    rights: "جميع الحقوق محفوظة",
+    rights: "© 2026 Abdullah Alamri. All rights reserved.",
+    disclaimer:
+      "ArabArenaAI is an independent AI comparison platform and is not affiliated with OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, or any other AI provider shown.",
+  },
+  admin: {
+    title: "لوحة الإدارة",
+    loginTitle: "تسجيل دخول الإدارة",
+    passwordLabel: "كلمة المرور",
+    login: "دخول",
+    logout: "خروج",
+    refresh: "تحديث البيانات",
+    notConfigured: "Admin is not configured.",
+    invalidCredentials: "Invalid credentials.",
+    unauthorized: "يجب تسجيل الدخول أولاً",
+    cards: {
+      totalModels: "إجمالي النماذج",
+      enabledModels: "النماذج المفعّلة",
+      providerHealth: "صحة المزودين",
+      recentComparisons: "المقارنات",
+      spendingLimits: "حدود الإنفاق",
+      deploymentStatus: "حالة النشر",
+      providerErrors: "آخر أخطاء المزودين",
+      comingSoon: "قريباً",
+    },
   },
   errors: {
     generic: "حدث خطأ غير متوقع",
