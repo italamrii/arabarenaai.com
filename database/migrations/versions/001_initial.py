@@ -211,7 +211,7 @@ def _seed() -> None:
     model_defs = [
         ("openai", "gpt-4o", "GPT-4o", "GPT-4o", 1, False),
         ("openai", "gpt-4o-mini", "GPT-4o Mini", "GPT-4o Mini", 2, False),
-        ("anthropic", "claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet", "Claude 3.5 Sonnet", 3, False),
+        ("anthropic", "claude-sonnet-4-20250514", "Claude Sonnet 4", "Claude Sonnet 4", 3, False),
         ("google", "gemini-1.5-pro", "Gemini 1.5 Pro", "Gemini 1.5 Pro", 4, False),
         ("deepseek", "deepseek-chat", "DeepSeek Chat", "DeepSeek Chat", 5, False),
         ("qwen", "qwen-plus", "Qwen Plus", "Qwen Plus", 6, False),
