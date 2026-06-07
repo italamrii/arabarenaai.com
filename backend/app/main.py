@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 
 from app.core.config import get_settings, reload_settings
+from app.core.startup_patches import apply_startup_patches
 
 from app.core.exceptions import AppError, error_response
 
@@ -53,6 +54,8 @@ async def lifespan(_app: FastAPI):
 
 
     configure_logging(level=settings.log_level, log_format=settings.log_format)
+
+    apply_startup_patches()
 
     log_event(
 
