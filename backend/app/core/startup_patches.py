@@ -11,13 +11,14 @@ from app.observability.logging_config import log_event
 
 logger = logging.getLogger(__name__)
 
-CLAUDE_TARGET_KEY = "claude-sonnet-4-0"
+CLAUDE_TARGET_KEY = "claude-sonnet-4-6"
 CLAUDE_LEGACY_KEYS = (
+    "claude-sonnet-4-0",
     "claude-sonnet-4-20250514",
     "claude-3-5-sonnet-20241022",
 )
-CLAUDE_NAME_AR = "Claude Sonnet 4"
-CLAUDE_NAME_EN = "Claude Sonnet 4"
+CLAUDE_NAME_AR = "Claude Sonnet 4.6"
+CLAUDE_NAME_EN = "Claude Sonnet 4.6"
 
 
 def _patch_claude_model_key(db: Session) -> None:
