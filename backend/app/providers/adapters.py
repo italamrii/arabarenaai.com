@@ -302,6 +302,14 @@ class AnthropicAdapter:
                         "messages": [{"role": "user", "content": prompt}],
                     },
                 )
+                logger.error(
+                    "ANTHROPIC RAW RESPONSE",
+                    extra={
+                        "status_code": response.status_code,
+                        "response_text": response.text,
+                        "model_key": model_key,
+                    },
+                )
                 response.raise_for_status()
                 data = response.json()
         except Exception as exc:
