@@ -1,10 +1,12 @@
+import { memo } from "react";
+
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
   className?: string;
 }
 
-export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
+export const PageHeader = memo(function PageHeader({ title, subtitle, className }: PageHeaderProps) {
   return (
     <div className={className}>
       <h1 className="text-3xl sm:text-4xl font-bold tracking-tight animate-slide-up">{title}</h1>
@@ -15,4 +17,4 @@ export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
       )}
     </div>
   );
-}
+});

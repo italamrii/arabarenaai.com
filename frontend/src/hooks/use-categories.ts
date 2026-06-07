@@ -15,6 +15,7 @@ export function useCategories() {
         supportsAutoDetect: res.meta?.supports_auto_detect ?? true,
       };
     },
+    staleTime: 5 * 60_000,
   });
 }
 

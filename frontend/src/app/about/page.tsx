@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+
 import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/shared/page-header";
 import { DisclaimerBanner } from "@/components/analytics/disclaimer-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ar } from "@/i18n/ar";
+import { createPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = createPageMetadata({
+  title: ar.seo.about.title,
+  description: ar.seo.about.description,
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

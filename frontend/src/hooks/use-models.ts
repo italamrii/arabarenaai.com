@@ -8,6 +8,7 @@ export function useModels() {
   return useQuery({
     queryKey: ["models", { enabled_only: true }],
     queryFn: () => api.getModelsFull(),
+    staleTime: 60_000,
   });
 }
 

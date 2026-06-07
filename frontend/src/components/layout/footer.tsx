@@ -23,8 +23,22 @@ export function Footer() {
             <Link href="/about" className="hover:text-accent transition-colors">
               {ar.nav.about}
             </Link>
+            <Link href="/contact" className="hover:text-accent transition-colors">
+              {ar.nav.contact}
+            </Link>
           </div>
         </div>
+
+        <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground/80">{ar.footer.legal}</span>
+          <Link href="/privacy" className="hover:text-accent transition-colors">
+            {ar.nav.privacy}
+          </Link>
+          <Link href="/terms" className="hover:text-accent transition-colors">
+            {ar.nav.terms}
+          </Link>
+        </div>
+
         <Separator className="my-6" />
         <div className="space-y-3 text-xs text-muted-foreground text-center max-w-3xl mx-auto">
           <p>{ar.footer.rights}</p>
