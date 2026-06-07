@@ -215,7 +215,7 @@ def _seed() -> None:
         ("google", "gemini-2.5-flash", "Gemini 2.5 Flash", "Gemini 2.5 Flash", 4, False),
         ("deepseek", "deepseek-chat", "DeepSeek Chat", "DeepSeek Chat", 5, False),
         ("qwen", "qwen-plus", "Qwen Plus", "Qwen Plus", 6, False),
-        ("xai", "grok-beta", "Grok", "Grok", 7, False),
+        ("xai", "grok-4.3", "Grok", "Grok", 7, False),
         ("allam", "allam", "علّام", "ALLaM", 8, True),
     ]
     op.bulk_insert(
