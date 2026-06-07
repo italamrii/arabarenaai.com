@@ -69,6 +69,17 @@ export const ar = {
     modelsLoadError: "تعذّر تحميل النماذج. تحقق من الاتصال بالخادم وحاول مرة أخرى.",
     modelsLoading: "جاري تحميل النماذج...",
     providerUnavailable: "المزود غير متاح حالياً",
+    guide: {
+      title: "كيف تبدأ المقارنة",
+      steps: [
+        "اكتب موجهًا واضحًا بالعربية يصف ما تريد مقارنته.",
+        "اختر فئة الموجه أو فعّل الاكتشاف التلقائي.",
+        "حدّد نموذجين على الأقل ثم اضغط «ابدأ المقارنة».",
+      ],
+    },
+    emptyPrompt: "ابدأ بكتابة موجهك هنا لرؤية الخطوات التالية.",
+    emptyModelsTitle: "لا توجد نماذج متاحة حالياً",
+    emptyModelsDescription: "تحقق من الاتصال بالخادم أو أعد تحميل الصفحة لاحقًا.",
   },
   results: {
     title: "نتائج المقارنة",
@@ -137,10 +148,12 @@ export const ar = {
   },
   footer: {
     tagline: "مقارنة شفافة · إشارات مجتمعية · عربي أولًا",
-    rights: "© 2026 Abdullah Alamri. All rights reserved.",
+    platformTagline: "AI Model Comparison Platform",
+    rights: "© 2026 ArabArenaAI",
     disclaimer:
       "ArabArenaAI is an independent AI comparison platform and is not affiliated with OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, or any other AI provider shown.",
     legal: "الصفحات القانونية",
+    product: "المنتج",
   },
   privacy: {
     title: "سياسة الخصوصية",
@@ -203,8 +216,7 @@ export const ar = {
       contact: {
         title: "التواصل",
         paragraphs: [
-          "للاستفسارات المتعلقة بالخصوصية، يمكنك التواصل عبر صفحة تواصل معنا.",
-          "سيتم تحديث قنوات التواصل الرسمية عند توفرها بشكل كامل.",
+          "للاستفسارات المتعلقة بالخصوصية، يمكنك التواصل عبر privacy@arabarenaai.com أو صفحة تواصل معنا.",
         ],
       },
       retention: {
@@ -279,9 +291,30 @@ export const ar = {
     title: "تواصل معنا",
     subtitle: "نرحب باستفساراتك العامة والتجارية",
     emailSection: {
-      title: "البريد الإلكتروني",
-      placeholder: "info@arabarenaai.com",
-      note: "عنوان البريد أعلاه للعرض حالياً. سيتم تفعيل الاستقبال الرسمي عند الإطلاق الكامل.",
+      title: "قنوات البريد الإلكتروني",
+      note: "يمكنك التواصل مباشرة عبر البريد. نموذج الموقع يعرض واجهة مؤقتة دون إرسال خارجي حالياً.",
+    },
+    emails: {
+      hello: {
+        label: "البريد العام",
+        address: "hello@arabarenaai.com",
+        description: "للمراسلات العامة والتعريف بالمنصة.",
+      },
+      support: {
+        label: "الدعم",
+        address: "support@arabarenaai.com",
+        description: "للمساعدة التقنية ومشكلات استخدام المنصة.",
+      },
+      privacy: {
+        label: "الخصوصية",
+        address: "privacy@arabarenaai.com",
+        description: "للاستفسارات المتعلقة بالبيانات والخصوصية.",
+      },
+      contact: {
+        label: "التواصل",
+        address: "contact@arabarenaai.com",
+        description: "للاستفسارات العامة والتجارية.",
+      },
     },
     general: {
       title: "استفسارات عامة",
@@ -300,9 +333,9 @@ export const ar = {
       businessInquiry: "استفسار تجاري",
       messageLabel: "الرسالة",
       submit: "إرسال الرسالة",
-      helper: "إرسال الرسائل عبر الموقع قيد التفعيل. يعرض النموذج واجهة مؤقتة دون إرسال خارجي حالياً.",
+      helper: "يمكنك أيضًا التواصل مباشرة عبر البريد أعلاه. إرسال النموذج عبر الموقع قيد التفعيل.",
       placeholderNotice:
-        "شكراً لتواصلك. إرسال الرسائل عبر الموقع غير مفعّل بعد، ولن تتم مشاركة بياناتك مع أي خدمة بريد خارجية. يمكنك متابعة قنوات التواصل الرسمية عند توفرها.",
+        "شكراً لتواصلك. إرسال الرسائل عبر الموقع غير مفعّل بعد. للتواصل الفوري، استخدم أحد عناوين البريد الرسمية أعلاه.",
     },
   },
   seo: {
@@ -387,6 +420,12 @@ export const ar = {
   errors: {
     generic: "حدث خطأ غير متوقع",
     retry: "إعادة المحاولة",
+    retryHint: "حدثت مشكلة مؤقتة. يمكنك إعادة المحاولة أو العودة للرئيسية.",
+    goHome: "العودة للرئيسية",
+  },
+  notFound: {
+    title: "الصفحة غير موجودة",
+    description: "الرابط الذي طلبته غير متوفر أو تم نقله. جرّب العودة للرئيسية أو ابدأ مقارنة جديدة.",
     goHome: "العودة للرئيسية",
   },
 } as const;

@@ -13,25 +13,35 @@ const FEATURE_ICONS = [Languages, BarChart3, Users] as const;
 export function HomePage() {
   return (
     <>
-      <section className="relative overflow-hidden py-16 sm:py-24 lg:py-32">
-        <Container>
+      <section
+        className="relative overflow-hidden py-20 sm:py-28 lg:py-32"
+        aria-labelledby="home-hero-heading"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,212,255,0.08),transparent_55%)]"
+          aria-hidden="true"
+        />
+        <Container className="relative">
           <div className="max-w-3xl mx-auto text-center animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-sm text-accent mb-6">
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
               {ar.brandTagline}
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+            <h1
+              id="home-hero-heading"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15]"
+            >
               {ar.home.heroTitle}{" "}
               <span className="text-gradient">{ar.home.heroHighlight}</span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               {ar.home.heroSubtitle}
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg">
+            <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+              <Button asChild size="lg" className="w-full sm:w-auto shadow-[0_0_24px_rgba(0,212,255,0.2)]">
                 <Link href="/compare">{ar.home.cta}</Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
                 <Link href="/insights">{ar.home.ctaSecondary}</Link>
               </Button>
             </div>
@@ -39,19 +49,25 @@ export function HomePage() {
         </Container>
       </section>
 
-      <section className="py-16 border-t border-border/50">
+      <section className="py-16 sm:py-20 border-t border-border/50" aria-labelledby="home-features-heading">
         <Container>
-          <div className="grid gap-6 md:grid-cols-3">
+          <h2 id="home-features-heading" className="sr-only">
+            {ar.brandTagline}
+          </h2>
+          <div className="grid gap-5 sm:gap-6 md:grid-cols-3">
             {ar.home.features.map((feature, index) => {
               const Icon = FEATURE_ICONS[index] ?? Sparkles;
               return (
-                <Card key={feature.title} className="hover:border-accent/30 transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
-                      <Icon className="h-5 w-5 text-accent" />
+                <Card
+                  key={feature.title}
+                  className="h-full border-border/80 bg-card/40 hover:border-accent/35 hover:bg-card/60 transition-all duration-300"
+                >
+                  <CardContent className="p-6 sm:p-7">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 mb-4">
+                      <Icon className="h-5 w-5 text-accent" aria-hidden="true" />
                     </div>
-                    <h3 className="font-semibold text-lg">{feature.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    <h3 className="font-semibold text-lg tracking-tight">{feature.title}</h3>
+                    <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -62,28 +78,33 @@ export function HomePage() {
         </Container>
       </section>
 
-      <section className="py-16">
+      <section className="py-16 sm:py-20" aria-labelledby="home-steps-heading">
         <Container size="narrow">
-          <h2 className="text-2xl font-bold text-center mb-10">{ar.home.howItWorks}</h2>
-          <ol className="space-y-4">
+          <h2 id="home-steps-heading" className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10">
+            {ar.home.howItWorks}
+          </h2>
+          <ol className="space-y-3 sm:space-y-4" role="list">
             {ar.home.steps.map((step, index) => (
               <li
                 key={step}
-                className="flex items-center gap-4 rounded-lg border border-border bg-card/50 p-4 animate-slide-up"
+                className="flex items-center gap-4 rounded-xl border border-border/80 bg-card/40 p-4 sm:p-5 animate-slide-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent font-bold text-sm">
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent font-bold text-sm"
+                  aria-hidden="true"
+                >
                   {index + 1}
                 </span>
-                <span className="text-foreground/90">{step}</span>
+                <span className="text-foreground/90 text-sm sm:text-base leading-relaxed">{step}</span>
               </li>
             ))}
           </ol>
-          <div className="mt-10 text-center">
-            <Button asChild variant="secondary">
+          <div className="mt-10 sm:mt-12 text-center">
+            <Button asChild variant="secondary" size="lg">
               <Link href="/compare">
                 {ar.home.cta}
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>

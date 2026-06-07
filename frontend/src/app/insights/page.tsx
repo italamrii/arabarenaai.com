@@ -1,13 +1,24 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
-import { PreferenceChart } from "@/components/analytics/preference-chart";
 import { PreferenceCards } from "@/components/analytics/preference-cards";
 import { DisclaimerBanner } from "@/components/analytics/disclaimer-banner";
 import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/shared/page-header";
 import { ChartSkeleton, PageSkeleton } from "@/components/shared/loading-skeletons";
+
+const PreferenceChart = dynamic(
+  () =>
+    import("@/components/analytics/preference-chart").then((module) => ({
+      default: module.PreferenceChart,
+    })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false,
+  },
+);
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";

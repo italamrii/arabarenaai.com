@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Check, X } from "lucide-react";
 
 import type { Model } from "@/lib/api/types";
@@ -27,7 +28,7 @@ interface ModelPickerProps {
   onChange: (ids: string[]) => void;
 }
 
-export function ModelPicker({
+export const ModelPicker = memo(function ModelPicker({
   models,
   selectedIds,
   min = 2,
@@ -63,11 +64,17 @@ export function ModelPicker({
   const isReady = selectedIds.length >= min;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5" role="group" aria-label={ar.compare.modelsLabel}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground">{ar.compare.modelsHint}</p>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={selectPopular}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={selectPopular}
+            aria-label={ar.compare.selectPopular}
+          >
             {ar.compare.selectPopular}
           </Button>
           {selectedIds.length > 0 && (
@@ -91,7 +98,7 @@ export function ModelPicker({
         return (
           <div key={providerKey} className="space-y-2.5">
             <p className="section-label">{providerModels[0]?.provider.name_ar ?? providerKey}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2.5 sm:grid-cols-2">
               {providerModels.map((model) => {
                 const selected = selectedIds.includes(model.id);
                 const atMax = !selected && selectedIds.length >= max;
@@ -107,6 +114,7 @@ export function ModelPicker({
                     disabled={disabled && !model.is_placeholder}
                     onClick={() => toggle(model)}
                     aria-pressed={selected}
+                    aria-label={`${model.name_ar}${selected ? `، ${ar.compare.selected}` : ""}`}
                     className={cn(
                       "group relative flex items-center gap-3 rounded-xl border p-3.5 text-start transition-all duration-200",
                       "bg-gradient-to-br",
@@ -154,4 +162,4 @@ export function ModelPicker({
       })}
     </div>
   );
-}
+});

@@ -35,7 +35,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5" aria-label={ar.contact.form.title}>
       <div className="space-y-2">
         <Label htmlFor="contact-name">{ar.contact.form.nameLabel}</Label>
         <Input
@@ -60,7 +60,7 @@ export function ContactForm() {
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">{ar.contact.form.inquiryTypeLabel}</legend>
+        <legend className="text-sm font-medium mb-1">{ar.contact.form.inquiryTypeLabel}</legend>
         <div className="flex flex-col sm:flex-row gap-3">
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input
