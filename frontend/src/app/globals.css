@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
+  --color-card: #111111;
+  --color-card-foreground: #ffffff;
+  --color-muted: #1a1a1a;
+  --color-muted-foreground: #a1a1aa;
+  --color-border: #222222;
+  --color-accent: #00d4ff;
+  --color-accent-foreground: #0a0a0a;
+  --color-primary: #00d4ff;
+  --color-primary-foreground: #0a0a0a;
+  --color-secondary: #1a1a1a;
+  --color-secondary-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-ring: #00d4ff;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --font-sans: var(--font-arabic), system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground min-h-screen;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(0, 212, 255, 0.04), transparent);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #ffffff 0%, #00d4ff 100%);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.15);
+  }
+
+  .card-premium {
+    @apply rounded-xl border border-border bg-card/80 backdrop-blur-sm;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  .cta-hero {
+    @apply relative overflow-hidden font-semibold;
+    background: linear-gradient(135deg, #00d4ff 0%, #00a8cc 50%, #00d4ff 100%);
+    background-size: 200% 200%;
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.3),
+      0 4px 24px rgba(0, 212, 255, 0.35),
+      0 0 60px rgba(0, 212, 255, 0.15);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+
+  .cta-hero:hover:not(:disabled) {
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.5),
+      0 8px 32px rgba(0, 212, 255, 0.45),
+      0 0 80px rgba(0, 212, 255, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .cta-hero:disabled {
+    @apply opacity-40;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .sticky-cta-bar {
+    @apply fixed bottom-0 inset-x-0 z-40 border-t border-border/80 bg-background/90 backdrop-blur-xl;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .response-prose {
+    @apply text-[15px] leading-[1.85] text-foreground/95;
+  }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Recharts dark theme overrides */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #222222;
+}
+
+.recharts-text {
+  fill: #a1a1aa;
+  font-size: 12px;
+}

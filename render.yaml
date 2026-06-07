@@ -1,0 +1,49 @@
+# Render Blueprint — Arab Benchmark AI API
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy: connect repo in Render Dashboard → New Blueprint → select render.yaml
+# Or create a Web Service manually using the settings below.
+#
+# Database is hosted on Supabase (not Render Postgres). Set DATABASE_URL manually.
+
+services:
+  - type: web
+    name: arab-benchmark-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    region: frankfurt
+    plan: starter
+    healthCheckPath: /v1/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: APP_VERSION
+        value: "1.0.0"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_FORMAT
+        value: json
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: QWEN_API_KEY
+        sync: false
+      - key: XAI_API_KEY
+        sync: false
+      - key: ALLAM_API_KEY
+        sync: false
+      - key: CATEGORY_CLASSIFIER_MODEL
+        value: gpt-4o-mini
+      - key: CATEGORY_CONFIDENCE_THRESHOLD
+        value: "0.6"
