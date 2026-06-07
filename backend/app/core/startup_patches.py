@@ -11,52 +11,74 @@ from app.observability.logging_config import log_event
 
 logger = logging.getLogger(__name__)
 
-CLAUDE_OLD_KEY = "claude-3-5-sonnet-20241022"
-CLAUDE_NEW_KEY = "claude-sonnet-4-20250514"
+CLAUDE_TARGET_KEY = "claude-sonnet-4-0"
+CLAUDE_LEGACY_KEYS = (
+    "claude-sonnet-4-20250514",
+    "claude-3-5-sonnet-20241022",
+)
 CLAUDE_NAME_AR = "Claude Sonnet 4"
 CLAUDE_NAME_EN = "Claude Sonnet 4"
 
 
 def _patch_claude_model_key(db: Session) -> None:
-    """Rename legacy Claude model key in-place (same row id, no duplicates)."""
-    old_model = db.scalar(select(AIModel).where(AIModel.key == CLAUDE_OLD_KEY))
-    if old_model is None:
+    """Rename legacy Claude model keys in-place (same row id, no duplicates)."""
+    target_model = db.scalar(select(AIModel).where(AIModel.key == CLAUDE_TARGET_KEY))
+    if target_model is not None:
         log_event(
             logger,
             "startup.patch.claude_model_key.skipped",
-            reason="old_key_not_found",
-            old_key=CLAUDE_OLD_KEY,
+            reason="already_at_target",
+            model_id=str(target_model.id),
+            target_key=CLAUDE_TARGET_KEY,
         )
         return
 
-    conflict = db.scalar(
-        select(AIModel).where(AIModel.key == CLAUDE_NEW_KEY, AIModel.id != old_model.id)
-    )
-    if conflict is not None:
+    for legacy_key in CLAUDE_LEGACY_KEYS:
+        legacy_model = db.scalar(select(AIModel).where(AIModel.key == legacy_key))
+        if legacy_model is None:
+            continue
+
+        conflict = db.scalar(
+            select(AIModel).where(
+                AIModel.key == CLAUDE_TARGET_KEY,
+                AIModel.id != legacy_model.id,
+            )
+        )
+        if conflict is not None:
+            log_event(
+                logger,
+                "startup.patch.claude_model_key.skipped",
+                reason="target_key_exists_on_other_row",
+                legacy_key=legacy_key,
+                legacy_model_id=str(legacy_model.id),
+                existing_model_id=str(conflict.id),
+            )
+            return
+
+        model_id = str(legacy_model.id)
+        previous_key = legacy_model.key
+        legacy_model.key = CLAUDE_TARGET_KEY
+        legacy_model.name_ar = CLAUDE_NAME_AR
+        legacy_model.name_en = CLAUDE_NAME_EN
+        db.commit()
+
         log_event(
             logger,
-            "startup.patch.claude_model_key.skipped",
-            reason="new_key_exists_on_other_row",
-            old_model_id=str(old_model.id),
-            existing_model_id=str(conflict.id),
+            "startup.patch.claude_model_key.applied",
+            model_id=model_id,
+            old_key=previous_key,
+            new_key=CLAUDE_TARGET_KEY,
+            name_ar=CLAUDE_NAME_AR,
+            name_en=CLAUDE_NAME_EN,
         )
         return
-
-    model_id = str(old_model.id)
-    previous_key = old_model.key
-    old_model.key = CLAUDE_NEW_KEY
-    old_model.name_ar = CLAUDE_NAME_AR
-    old_model.name_en = CLAUDE_NAME_EN
-    db.commit()
 
     log_event(
         logger,
-        "startup.patch.claude_model_key.applied",
-        model_id=model_id,
-        old_key=previous_key,
-        new_key=CLAUDE_NEW_KEY,
-        name_ar=CLAUDE_NAME_AR,
-        name_en=CLAUDE_NAME_EN,
+        "startup.patch.claude_model_key.skipped",
+        reason="legacy_key_not_found",
+        legacy_keys=list(CLAUDE_LEGACY_KEYS),
+        target_key=CLAUDE_TARGET_KEY,
     )
 
 
