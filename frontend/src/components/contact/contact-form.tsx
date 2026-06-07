@@ -10,6 +10,12 @@ import { ar } from "@/i18n/ar";
 
 type InquiryType = "general" | "business";
 
+function resolveRecipient(inquiryType: InquiryType): string {
+  return inquiryType === "business"
+    ? ar.contact.emails.hello.address
+    : ar.contact.emails.contact.address;
+}
+
 export function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,6 +25,17 @@ export function ContactForm() {
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+
+    const recipient = resolveRecipient(inquiryType);
+    const subject = encodeURIComponent(
+      `ArabArenaAI — ${inquiryType === "business" ? ar.contact.form.businessInquiry : ar.contact.form.generalInquiry}`,
+    );
+    const body = encodeURIComponent(
+      `الاسم: ${name}\nالبريد: ${email}\nنوع الاستفسار: ${inquiryType === "business" ? ar.contact.form.businessInquiry : ar.contact.form.generalInquiry}\n\n${message}`,
+    );
+
+    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+
     setSubmitted(true);
     setName("");
     setEmail("");
@@ -28,8 +45,11 @@ export function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="rounded-lg border border-border bg-muted/30 px-4 py-5 text-sm text-muted-foreground leading-relaxed">
-        {ar.contact.form.placeholderNotice}
+      <div
+        role="status"
+        className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-5 text-sm text-foreground leading-relaxed"
+      >
+        {ar.contact.form.successNotice}
       </div>
     );
   }
@@ -43,6 +63,7 @@ export function ContactForm() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           required
+          autoComplete="name"
         />
       </div>
 
@@ -56,6 +77,7 @@ export function ContactForm() {
           required
           dir="ltr"
           className="text-start"
+          autoComplete="email"
         />
       </div>
 

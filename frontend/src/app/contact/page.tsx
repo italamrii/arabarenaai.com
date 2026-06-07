@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { ContactBetaNotice } from "@/components/contact/contact-beta-notice";
 import { ContactEmailLink } from "@/components/contact/contact-email-link";
 import { ContactForm } from "@/components/contact/contact-form";
+import { ContactSocialLink } from "@/components/contact/contact-social-link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ar } from "@/i18n/ar";
@@ -39,6 +41,8 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <ContactSocialLink />
+
       <div className="grid gap-6 sm:grid-cols-2">
         <Card className="border-border/80 bg-card/40">
           <CardHeader>
@@ -62,6 +66,8 @@ export default function ContactPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ContactBetaNotice />
 
       <Card className="border-border/80 bg-card/40">
         <CardHeader>
