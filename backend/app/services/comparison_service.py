@@ -12,7 +12,7 @@ from app.core.exceptions import (
     UnprocessableAppError,
     ValidationAppError,
 )
-from app.domain.comparison import compute_comparison_status, validate_model_count
+from app.domain.comparison import compute_comparison_status
 from app.models.comparison import Comparison
 from app.models.model import AIModel
 from app.providers.registry import ProviderRegistry
@@ -39,6 +39,43 @@ class ComparisonService:
         self.model_repo = ModelRepository(db)
         self.category_service = CategoryService(db, settings)
 
+    def _enforce_spending_limits(self, *, prompt: str, model_count: int) -> str:
+        """Reject comparisons that exceed env-configured spending limits."""
+        trimmed = prompt.strip()
+        if not trimmed:
+            raise ValidationAppError(
+                message="النص مطلوب",
+                message_en="Prompt is required",
+            )
+
+        max_chars = self.settings.max_prompt_chars
+        if len(trimmed) > max_chars:
+            raise ValidationAppError(
+                message=f"النص يتجاوز {max_chars} حرفاً",
+                message_en="Prompt too long",
+                details=[{"field": "prompt", "issue": "too_long", "max": max_chars}],
+            )
+
+        min_models = self.settings.min_models_per_comparison
+        max_models = self.settings.max_models_per_comparison
+        if model_count < min_models:
+            raise ValidationAppError(
+                message=f"يجب اختيار {min_models} نماذج على الأقل",
+                message_en=f"At least {min_models} models required",
+                details=[{"field": "model_ids", "issue": "too_few", "min": min_models}],
+            )
+        if model_count > max_models:
+            raise ValidationAppError(
+                message=f"الحد الأقصى {max_models} نماذج لكل مقارنة",
+                message_en=f"At most {max_models} models per comparison",
+                details=[{"field": "model_ids", "issue": "too_many", "max": max_models}],
+            )
+
+        return trimmed
+
+    def _effective_max_tokens(self, model: AIModel) -> int:
+        return min(model.max_tokens, self.settings.provider_max_tokens)
+
     async def create_comparison(
         self,
         *,
@@ -48,26 +85,7 @@ class ComparisonService:
         model_ids: list[str],
         session_id: str,
     ) -> Comparison:
-        trimmed = prompt.strip()
-        if not trimmed:
-            raise ValidationAppError(
-                message="النص مطلوب",
-                message_en="Prompt is required",
-            )
-        if len(trimmed) > self.settings.max_prompt_length:
-            raise ValidationAppError(
-                message=f"النص يتجاوز {self.settings.max_prompt_length} حرفاً",
-                message_en="Prompt too long",
-            )
-
-        try:
-            validate_model_count(len(model_ids), self.settings)
-        except ValueError as exc:
-            raise ValidationAppError(
-                message="يجب اختيار بين ٢ و ١٠ نماذج",
-                message_en=str(exc),
-                details=[{"field": "model_ids", "issue": "invalid_count"}],
-            ) from exc
+        trimmed = self._enforce_spending_limits(prompt=prompt, model_count=len(model_ids))
 
         parsed_ids = [self._parse_uuid(mid, "model_ids") for mid in model_ids]
         models = self.model_repo.get_by_ids(parsed_ids)
@@ -140,6 +158,25 @@ class ComparisonService:
                 )
                 return
 
+            try:
+                self._enforce_spending_limits(
+                    prompt=prompt_row.content,
+                    model_count=len(comparison.targets),
+                )
+            except ValidationAppError as exc:
+                log_event(
+                    logger,
+                    "comparison.inference.spending_limit_rejected",
+                    level=logging.WARNING,
+                    comparison_id=comparison_id_str,
+                    error_code=exc.code,
+                    message_ar=exc.message,
+                )
+                self.comparison_repo.set_comparison_status(comparison, "failed")
+                db.commit()
+                status = "failed"
+                return
+
             models = self.model_repo.get_by_ids(
                 [target.model_id for target in comparison.targets if target.model_id]
             )
@@ -207,13 +244,16 @@ class ComparisonService:
     ) -> tuple[uuid.UUID, dict]:
         provider_key = model.provider.key
         adapter = self.providers.get(provider_key)
+        capped_max_tokens = self._effective_max_tokens(model)
         log_event(
             logger,
             "comparison.inference.model_starting",
             response_id=str(response_id),
             provider_key=provider_key,
             model_key=model.key,
-            max_tokens=model.max_tokens,
+            max_tokens=capped_max_tokens,
+            model_max_tokens=model.max_tokens,
+            provider_max_tokens_cap=self.settings.provider_max_tokens,
             timeout_ms=model.timeout_ms,
             prompt_length=len(prompt),
             adapter_configured=bool(adapter and adapter.is_configured()),
@@ -245,7 +285,7 @@ class ComparisonService:
                 provider_key=provider_key,
                 prompt=prompt,
                 model_key=model.key,
-                max_tokens=model.max_tokens,
+                max_tokens=capped_max_tokens,
                 timeout_ms=model.timeout_ms,
             )
             return response_id, {

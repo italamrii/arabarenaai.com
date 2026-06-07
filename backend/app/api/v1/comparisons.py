@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _run_inference_task(comparison_id: uuid.UUID) -> None:
-    from app.observability.logging_config import log_exception_event
+    from app.observability.logging_config import log_event, log_exception_event
     from app.observability.metrics import get_metrics
 
     db = SessionLocal()
@@ -48,7 +48,20 @@ async def create_comparison(
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_comparisons)],
 ) -> Envelope[ComparisonCreatedOut]:
-    service = ComparisonService(db, get_settings(), get_provider_registry())
+    settings = get_settings()
+    service = ComparisonService(db, settings, get_provider_registry())
+    log_event(
+        logger,
+        "comparison.create.requested",
+        model_count=len(body.model_ids),
+        prompt_chars=len(body.prompt.strip()),
+        spending_limits={
+            "min_models": settings.min_models_per_comparison,
+            "max_models": settings.max_models_per_comparison,
+            "max_prompt_chars": settings.max_prompt_chars,
+            "provider_max_tokens": settings.provider_max_tokens,
+        },
+    )
     comparison = await service.create_comparison(
         prompt=body.prompt,
         category_mode=body.category_mode,

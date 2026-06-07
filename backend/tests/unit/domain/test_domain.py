@@ -8,9 +8,11 @@ from app.domain.comparison import compute_comparison_status, validate_model_coun
 def test_validate_model_count() -> None:
     settings = Settings()
     validate_model_count(2, settings)
-    validate_model_count(10, settings)
+    validate_model_count(4, settings)
     with pytest.raises(ValueError):
         validate_model_count(1, settings)
+    with pytest.raises(ValueError):
+        validate_model_count(5, settings)
 
 
 def test_compute_comparison_status() -> None:

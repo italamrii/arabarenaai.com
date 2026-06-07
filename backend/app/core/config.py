@@ -118,6 +118,12 @@ class Settings(BaseSettings):
 
     max_models: int = 10
 
+    # Spending protection (env: MAX_MODELS_PER_COMPARISON, MIN_MODELS_PER_COMPARISON, etc.)
+    max_models_per_comparison: int = 4
+    min_models_per_comparison: int = 2
+    max_prompt_chars: int = 1000
+    provider_max_tokens: int = 800
+
 
 
     rate_limit_comparisons_per_hour: int = 10
