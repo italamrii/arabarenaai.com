@@ -170,6 +170,18 @@ export const api = {
     try {
       const res = await client.post<ApiEnvelope<UploadResult>>("/uploads", formData, {
         headers: { "X-Session-Id": sessionId },
+        transformRequest: [
+          (data, headers) => {
+            if (data instanceof FormData && headers) {
+              if (typeof (headers as { delete?: (key: string) => void }).delete === "function") {
+                (headers as { delete: (key: string) => void }).delete("Content-Type");
+              } else {
+                delete (headers as Record<string, unknown>)["Content-Type"];
+              }
+            }
+            return data;
+          },
+        ],
       });
       return readEnvelope(res).payload;
     } catch (err) {
