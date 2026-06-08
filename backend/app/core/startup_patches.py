@@ -1,8 +1,9 @@
 """Idempotent database patches applied once on app startup."""
 
 import logging
+from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import inspect, select, text
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
@@ -10,6 +11,9 @@ from app.models.model import AIModel
 from app.observability.logging_config import log_event
 
 logger = logging.getLogger(__name__)
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+UPLOADS_SQL_PATH = BACKEND_ROOT / "scripts" / "add_uploads.sql"
 
 CLAUDE_TARGET_KEY = "claude-sonnet-4-6"
 CLAUDE_LEGACY_KEYS = (
@@ -83,10 +87,51 @@ def _patch_claude_model_key(db: Session) -> None:
     )
 
 
+def _parse_sql_file(sql_path: Path) -> list[str]:
+    """Load SQL statements from file, ignoring blank lines and -- comments."""
+    raw = sql_path.read_text(encoding="utf-8")
+    lines: list[str] = []
+    for line in raw.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("--"):
+            continue
+        lines.append(line)
+
+    statements: list[str] = []
+    for part in "\n".join(lines).split(";"):
+        stmt = part.strip()
+        if stmt:
+            statements.append(stmt)
+    return statements
+
+
+def _patch_uploads_schema(db: Session) -> None:
+    """Apply backend/scripts/add_uploads.sql (idempotent uploads schema repair)."""
+    sql_path = UPLOADS_SQL_PATH
+    if not sql_path.is_file():
+        raise FileNotFoundError(f"Uploads migration SQL not found: {sql_path}")
+
+    bind = db.get_bind()
+    uploads_existed = inspect(bind).has_table("uploads")
+
+    for stmt in _parse_sql_file(sql_path):
+        db.execute(text(stmt))
+    db.commit()
+
+    log_event(
+        logger,
+        "startup.patch.uploads_schema.applied",
+        uploads_existed_before=uploads_existed,
+        uploads_exists_after=inspect(bind).has_table("uploads"),
+        sql_path=str(sql_path),
+    )
+
+
 def apply_startup_patches() -> None:
     db = SessionLocal()
     try:
         log_event(logger, "startup.patches.begin")
+        _patch_uploads_schema(db)
         _patch_claude_model_key(db)
         log_event(logger, "startup.patches.complete")
     except Exception as exc:
