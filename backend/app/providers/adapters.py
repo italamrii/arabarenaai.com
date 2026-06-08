@@ -393,7 +393,10 @@ class GoogleAdapter:
                     params={"key": api_key},
                     json={
                         "contents": [{"parts": parts}],
-                        "generationConfig": {"maxOutputTokens": max_tokens},
+                        "generationConfig": {
+                            "maxOutputTokens": max_tokens,
+                            "thinkingConfig": {"thinkingBudget": 0},
+                        },
                     },
                 )
                 response.raise_for_status()
@@ -416,10 +419,40 @@ class GoogleAdapter:
         elapsed = int((time.perf_counter() - start) * 1000)
         candidates = data.get("candidates", [])
         content = ""
+        finish_reason = None
+        safety_ratings = None
         if candidates:
-            parts = candidates[0].get("content", {}).get("parts", [])
+            candidate = candidates[0]
+            finish_reason = candidate.get("finishReason")
+            safety_ratings = candidate.get("safetyRatings")
+            parts = candidate.get("content", {}).get("parts", [])
             content = "".join(part.get("text", "") for part in parts)
         usage = data.get("usageMetadata", {})
+        prompt_feedback = data.get("promptFeedback")
+        prompt_token_count = usage.get("promptTokenCount")
+        candidates_token_count = usage.get("candidatesTokenCount")
+        total_token_count = usage.get("totalTokenCount")
+        thoughts_token_count = usage.get("thoughtsTokenCount")
+        response_text_length = len(content)
+        response_preview = content[:200]
+        log_event(
+            logger,
+            "google.complete.diagnostic",
+            provider_key=self.key,
+            model=model_key,
+            finish_reason=finish_reason,
+            prompt_token_count=prompt_token_count,
+            candidates_token_count=candidates_token_count,
+            total_token_count=total_token_count,
+            thoughts_token_count=thoughts_token_count,
+            response_text_length=response_text_length,
+            response_preview=response_preview,
+            safety_ratings=safety_ratings,
+            prompt_feedback=prompt_feedback,
+            max_output_tokens=max_tokens,
+            thinking_budget=0,
+            response_time_ms=elapsed,
+        )
         return CompletionResult(
             content=content,
             response_time_ms=elapsed,
