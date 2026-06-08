@@ -164,32 +164,63 @@ export const api = {
   },
 
   async uploadAttachment(file: File): Promise<UploadResult> {
+    if (!(file instanceof File)) {
+      throw new Error("uploadAttachment requires a File object");
+    }
+
     const sessionId = await this.ensureSession();
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file, file.name);
+
+    const uploadUrl = `${API_BASE_URL}/uploads`;
+
     try {
-      const res = await client.post<ApiEnvelope<UploadResult>>("/uploads", formData, {
-        headers: { "X-Session-Id": sessionId },
-        transformRequest: [
-          (data, headers) => {
-            if (data instanceof FormData && headers) {
-              if (typeof (headers as { delete?: (key: string) => void }).delete === "function") {
-                (headers as { delete: (key: string) => void }).delete("Content-Type");
-              } else {
-                delete (headers as Record<string, unknown>)["Content-Type"];
-              }
-            }
-            return data;
-          },
-        ],
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json",
+          "X-Session-Id": sessionId,
+        },
       });
-      return readEnvelope(res).payload;
+
+      const body = (await response.json()) as ApiEnvelope<UploadResult> | ApiErrorEnvelope;
+
+      if (!response.ok) {
+        const errorPayload = (body as ApiErrorEnvelope).error;
+        if (errorPayload) {
+          throw new ApiClientError(
+            errorPayload.code,
+            errorPayload.message,
+            errorPayload.message_en,
+            response.status,
+          );
+        }
+        throw new ApiClientError(
+          "UPLOAD_FAILED",
+          "تعذر رفع الملف",
+          "Upload failed",
+          response.status,
+        );
+      }
+
+      const envelope = body as ApiEnvelope<UploadResult>;
+      if (!envelope.data) {
+        throw new ApiClientError(
+          "UPLOAD_FAILED",
+          "تعذر رفع الملف",
+          "Upload response missing data",
+          response.status,
+        );
+      }
+
+      return envelope.data;
     } catch (err) {
       if (err instanceof ApiClientError) throw err;
       throw new ApiClientError(
         "UPLOAD_FAILED",
         "تعذر رفع الملف",
-        "Upload failed",
+        err instanceof Error ? err.message : "Upload failed",
         0,
       );
     }
