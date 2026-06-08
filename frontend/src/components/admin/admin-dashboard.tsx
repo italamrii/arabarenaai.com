@@ -13,10 +13,12 @@ import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
 import { AdminControlCenter } from "@/components/admin/admin-control-center";
 import { AdminCostTrackingSection } from "@/components/admin/admin-cost-tracking";
+import { AdminModelRegistry } from "@/components/admin/admin-model-registry";
 import { AdminProviderBillingLinks } from "@/components/admin/admin-provider-billing-links";
 import { AdminUsageSignalsSection } from "@/components/admin/admin-usage-signals";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "@/i18n/locale-context";
 import type { AdminDashboardBackendData } from "@/lib/admin/backend";
 import type { AdminDashboardApiResponse, AdminDashboardPayload } from "@/lib/admin/types";
@@ -111,287 +113,343 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.systemControls.title}</h2>
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminSystemControls />
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          <TabsTrigger value="overview">{t.admin.tabs.overview}</TabsTrigger>
+          <TabsTrigger value="operations">{t.admin.tabs.operations}</TabsTrigger>
+          <TabsTrigger value="models">{t.admin.tabs.models}</TabsTrigger>
+          <TabsTrigger value="analytics">{t.admin.tabs.analytics}</TabsTrigger>
+        </TabsList>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.controlCenter.sectionTitle}</h2>
-        <AdminDashboardErrorBoundary>
-          <AdminControlCenter />
-        </AdminDashboardErrorBoundary>
-      </section>
+        <TabsContent value="overview" className="space-y-6">
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.systemOverview.title}</h2>
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminSystemOverview overview={data?.systemOverview} loading={loading} />
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.systemOverview.title}</h2>
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminSystemOverview overview={data?.systemOverview} loading={loading} />
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.providerStatus.title}</h2>
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminProviderStatus
+                  providers={data?.providerStatuses}
+                  loading={loading}
+                  providerHealthAvailable={providerHealthAvailable}
+                />
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.providerStatus.title}</h2>
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminProviderStatus
-              providers={data?.providerStatuses}
-              loading={loading}
-              providerHealthAvailable={providerHealthAvailable}
-            />
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.cards.usageInsights}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminUsageSignalsSection
+                signals={data?.adminStats?.usage_signals}
+                loading={loading}
+                available={adminStatsAvailable}
+                compact
+              />
+            </AdminDashboardErrorBoundary>
+          </section>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.sections.modelStats}</h2>
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminDashboardCard title={t.admin.cards.totalModels} loading={loading}>
-              {formatValue(modelStats?.total ?? data?.totalModels ?? null)}
-            </AdminDashboardCard>
-            <AdminDashboardCard title={t.admin.cards.selectableModels} loading={loading}>
-              {formatValue(modelStats?.selectable ?? null)}
-            </AdminDashboardCard>
-            <AdminDashboardCard title={t.admin.cards.placeholderModels} loading={loading}>
-              {formatValue(modelStats?.placeholder ?? null)}
-            </AdminDashboardCard>
-            <AdminDashboardCard title={t.admin.cards.unavailableProviderModels} loading={loading}>
-              {formatValue(modelStats?.unavailableProvider ?? null)}
-            </AdminDashboardCard>
-            <AdminDashboardCard
-              title={t.admin.cards.modelsByProvider}
-              loading={loading}
-              skeletonLines={5}
-              className="sm:col-span-2 lg:col-span-3"
-            >
-              {modelStats?.byProvider?.length ? (
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  {modelStats.byProvider.map((item) => (
-                    <li key={item.providerKey} className="flex justify-between gap-2">
-                      <span>{item.providerNameAr}</span>
-                      <span className="tabular-nums">{item.count}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
-              )}
-            </AdminDashboardCard>
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.cost.sectionTitle}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminCostTrackingSection
+                cost={data?.adminStats?.cost_tracking}
+                loading={loading}
+                available={adminStatsAvailable}
+                compact
+              />
+            </AdminDashboardErrorBoundary>
+          </section>
+        </TabsContent>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.cards.recentComparisons}</h2>
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminDashboardCard title={t.admin.cards.database} loading={loading} skeletonLines={6}>
-              {adminStatsAvailable && dbComparisons ? (
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>
-                    {t.admin.comparisons.total}: {dbComparisons.total}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.completed}: {dbComparisons.completed}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.partial}: {dbComparisons.partial}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.failed}: {dbComparisons.failed}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.pending}: {dbComparisons.pending}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.today}: {dbComparisons.today}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.avgResponseTime}:{" "}
-                    {dbComparisons.avg_response_time_ms != null
-                      ? `${dbComparisons.avg_response_time_ms} ms`
-                      : NA}
-                  </li>
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
-              )}
-            </AdminDashboardCard>
+        <TabsContent value="operations" className="space-y-6">
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.systemControls.title}</h2>
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminSystemControls />
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
 
-            <AdminDashboardCard title={t.admin.comparisons.runtimeStarted} loading={loading} skeletonLines={5}>
-              {data?.diagnosticsAvailable && runtimeComparisons ? (
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>
-                    {t.admin.comparisons.completed}: {runtimeComparisons.completed ?? NA}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.pending}: {runtimeComparisons.active ?? NA}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.partial}: {runtimeComparisons.partial ?? NA}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.failed}: {runtimeComparisons.failed ?? NA}
-                  </li>
-                  <li>
-                    {t.admin.comparisons.started}: {runtimeComparisons.started ?? NA}
-                  </li>
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
-              )}
-            </AdminDashboardCard>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.controlCenter.sectionTitle}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminControlCenter />
+            </AdminDashboardErrorBoundary>
+          </section>
 
-            <AdminDashboardCard title={t.admin.cards.deploymentStatus} loading={loading} skeletonLines={4}>
-              {data?.diagnosticsAvailable && data.deployment ? (
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <span>{t.admin.deployment.status}</span>
-                    <Badge variant="secondary">{deploymentStatusLabel(data.deployment.status)}</Badge>
-                  </div>
-                  <p className="text-muted-foreground">
-                    {t.admin.deployment.version}: {data.deployment.version}
-                  </p>
-                  {data.deployment.uptime_seconds != null ? (
-                    <p className="text-muted-foreground">
-                      {t.admin.deployment.uptime}: {Math.floor(data.deployment.uptime_seconds / 60)}{" "}
-                      {t.admin.deployment.uptimeUnit}
-                    </p>
-                  ) : null}
-                  {data.deployment.database_status ? (
-                    <p className="text-muted-foreground">
-                      {t.admin.deployment.database}: {data.deployment.database_status}
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
-              )}
-            </AdminDashboardCard>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.billingLinks.sectionTitle}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminProviderBillingLinks />
+            </AdminDashboardErrorBoundary>
+          </section>
+        </TabsContent>
 
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+        <TabsContent value="models" className="space-y-6">
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.modelRegistry.sectionTitle}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminModelRegistry />
+            </AdminDashboardErrorBoundary>
+          </section>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.cost.sectionTitle}</h2>
-        <AdminDashboardErrorBoundary>
-          <AdminCostTrackingSection
-            cost={data?.adminStats?.cost_tracking}
-            loading={loading}
-            available={adminStatsAvailable}
-          />
-        </AdminDashboardErrorBoundary>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.billingLinks.sectionTitle}</h2>
-        <AdminDashboardErrorBoundary>
-          <AdminProviderBillingLinks />
-        </AdminDashboardErrorBoundary>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">{t.admin.cards.usageInsights}</h2>
-        <AdminDashboardErrorBoundary>
-          <AdminUsageSignalsSection
-            signals={data?.adminStats?.usage_signals}
-            loading={loading}
-            available={adminStatsAvailable}
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-            <AdminDashboardCard title={t.admin.cards.totalVotes} loading={loading}>
-              {formatValue(data?.adminStats?.total_votes ?? null)}
-            </AdminDashboardCard>
-
-            <AdminDashboardCard title={t.admin.cards.uploads} loading={loading} skeletonLines={4}>
-              {data?.adminStats?.uploads ? (
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>
-                    {t.admin.uploads.total}: {data.adminStats.uploads.total}
-                  </li>
-                  <li>
-                    {t.admin.uploads.today}: {data.adminStats.uploads.today}
-                  </li>
-                  <li>
-                    {t.admin.uploads.images}: {data.adminStats.uploads.images}
-                  </li>
-                  <li>
-                    {t.admin.uploads.pdfs}: {data.adminStats.uploads.pdfs}
-                  </li>
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
-              )}
-            </AdminDashboardCard>
-
-            <AdminDashboardCard
-              title={t.admin.cards.providerSuccessRate}
-              loading={loading}
-              skeletonLines={6}
-              className="sm:col-span-2 lg:col-span-3"
-            >
-              {data?.adminStats?.provider_execution?.length ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px] text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-muted-foreground">
-                        <th className="py-2 pe-4 text-start font-medium">
-                          {t.admin.providerStatus.title}
-                        </th>
-                        <th className="py-2 pe-4 text-start font-medium">{t.admin.cards.mostSelectedModels}</th>
-                        <th className="py-2 pe-4 text-start font-medium">{t.admin.cards.providerSuccessRate}</th>
-                        <th className="py-2 text-start font-medium">{t.admin.cards.avgResponseTime}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.adminStats.provider_execution.map((item) => (
-                        <tr key={item.provider_key} className="border-b border-border/50">
-                          <td className="py-2 pe-4">{item.provider_name_ar}</td>
-                          <td className="py-2 pe-4 tabular-nums">{item.selection_count}</td>
-                          <td className="py-2 pe-4">{formatPercent(item.success_rate)}</td>
-                          <td className="py-2">
-                            {item.avg_response_time_ms != null
-                              ? `${item.avg_response_time_ms} ms`
-                              : NA}
-                          </td>
-                        </tr>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.sections.modelStats}</h2>
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminDashboardCard title={t.admin.cards.totalModels} loading={loading}>
+                  {formatValue(modelStats?.total ?? data?.totalModels ?? null)}
+                </AdminDashboardCard>
+                <AdminDashboardCard title={t.admin.cards.selectableModels} loading={loading}>
+                  {formatValue(modelStats?.selectable ?? null)}
+                </AdminDashboardCard>
+                <AdminDashboardCard title={t.admin.cards.placeholderModels} loading={loading}>
+                  {formatValue(modelStats?.placeholder ?? null)}
+                </AdminDashboardCard>
+                <AdminDashboardCard title={t.admin.cards.unavailableProviderModels} loading={loading}>
+                  {formatValue(modelStats?.unavailableProvider ?? null)}
+                </AdminDashboardCard>
+                <AdminDashboardCard
+                  title={t.admin.cards.modelsByProvider}
+                  loading={loading}
+                  skeletonLines={5}
+                  className="sm:col-span-2 lg:col-span-3"
+                >
+                  {modelStats?.byProvider?.length ? (
+                    <ul className="space-y-1 text-sm text-muted-foreground">
+                      {modelStats.byProvider.map((item) => (
+                        <li key={item.providerKey} className="flex justify-between gap-2">
+                          <span>{item.providerNameAr}</span>
+                          <span className="tabular-nums">{item.count}</span>
+                        </li>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
-              )}
-            </AdminDashboardCard>
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
+                  )}
+                </AdminDashboardCard>
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
+        </TabsContent>
 
-      <section className="space-y-4">
-        <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminActivitySection activity={data?.recentActivity} loading={loading} />
-            <AdminExecutionErrors
-              errors={data?.executionErrors}
-              loading={loading}
-              available={adminStatsAvailable}
-            />
-            <AdminErrorMonitoring
-              errors={data?.errorMonitoring}
-              loading={loading}
-              diagnosticsAvailable={Boolean(data?.diagnosticsAvailable)}
-            />
-          </div>
-        </AdminDashboardErrorBoundary>
-      </section>
+        <TabsContent value="analytics" className="space-y-6">
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.cards.usageInsights}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminUsageSignalsSection
+                signals={data?.adminStats?.usage_signals}
+                loading={loading}
+                available={adminStatsAvailable}
+              />
+            </AdminDashboardErrorBoundary>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.cost.sectionTitle}</h2>
+            <AdminDashboardErrorBoundary>
+              <AdminCostTrackingSection
+                cost={data?.adminStats?.cost_tracking}
+                loading={loading}
+                available={adminStatsAvailable}
+              />
+            </AdminDashboardErrorBoundary>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">{t.admin.cards.recentComparisons}</h2>
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminDashboardCard title={t.admin.cards.database} loading={loading} skeletonLines={6}>
+                  {adminStatsAvailable && dbComparisons ? (
+                    <ul className="space-y-1 text-sm text-muted-foreground">
+                      <li>
+                        {t.admin.comparisons.total}: {dbComparisons.total}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.completed}: {dbComparisons.completed}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.partial}: {dbComparisons.partial}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.failed}: {dbComparisons.failed}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.pending}: {dbComparisons.pending}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.today}: {dbComparisons.today}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.avgResponseTime}:{" "}
+                        {dbComparisons.avg_response_time_ms != null
+                          ? `${dbComparisons.avg_response_time_ms} ms`
+                          : NA}
+                      </li>
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
+                  )}
+                </AdminDashboardCard>
+
+                <AdminDashboardCard title={t.admin.comparisons.runtimeStarted} loading={loading} skeletonLines={5}>
+                  {data?.diagnosticsAvailable && runtimeComparisons ? (
+                    <ul className="space-y-1 text-sm text-muted-foreground">
+                      <li>
+                        {t.admin.comparisons.completed}: {runtimeComparisons.completed ?? NA}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.pending}: {runtimeComparisons.active ?? NA}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.partial}: {runtimeComparisons.partial ?? NA}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.failed}: {runtimeComparisons.failed ?? NA}
+                      </li>
+                      <li>
+                        {t.admin.comparisons.started}: {runtimeComparisons.started ?? NA}
+                      </li>
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
+                  )}
+                </AdminDashboardCard>
+
+                <AdminDashboardCard title={t.admin.cards.deploymentStatus} loading={loading} skeletonLines={4}>
+                  {data?.diagnosticsAvailable && data.deployment ? (
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{t.admin.deployment.status}</span>
+                        <Badge variant="secondary">{deploymentStatusLabel(data.deployment.status)}</Badge>
+                      </div>
+                      <p className="text-muted-foreground">
+                        {t.admin.deployment.version}: {data.deployment.version}
+                      </p>
+                      {data.deployment.uptime_seconds != null ? (
+                        <p className="text-muted-foreground">
+                          {t.admin.deployment.uptime}: {Math.floor(data.deployment.uptime_seconds / 60)}{" "}
+                          {t.admin.deployment.uptimeUnit}
+                        </p>
+                      ) : null}
+                      {data.deployment.database_status ? (
+                        <p className="text-muted-foreground">
+                          {t.admin.deployment.database}: {data.deployment.database_status}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
+                  )}
+                </AdminDashboardCard>
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
+
+          <section className="space-y-4">
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminDashboardCard title={t.admin.cards.totalVotes} loading={loading}>
+                  {formatValue(data?.adminStats?.total_votes ?? null)}
+                </AdminDashboardCard>
+
+                <AdminDashboardCard title={t.admin.cards.uploads} loading={loading} skeletonLines={4}>
+                  {data?.adminStats?.uploads ? (
+                    <ul className="space-y-1 text-sm text-muted-foreground">
+                      <li>
+                        {t.admin.uploads.total}: {data.adminStats.uploads.total}
+                      </li>
+                      <li>
+                        {t.admin.uploads.today}: {data.adminStats.uploads.today}
+                      </li>
+                      <li>
+                        {t.admin.uploads.images}: {data.adminStats.uploads.images}
+                      </li>
+                      <li>
+                        {t.admin.uploads.pdfs}: {data.adminStats.uploads.pdfs}
+                      </li>
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
+                  )}
+                </AdminDashboardCard>
+
+                <AdminDashboardCard
+                  title={t.admin.cards.providerSuccessRate}
+                  loading={loading}
+                  skeletonLines={6}
+                  className="sm:col-span-2 lg:col-span-3"
+                >
+                  {data?.adminStats?.provider_execution?.length ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[640px] text-sm">
+                        <thead>
+                          <tr className="border-b border-border text-muted-foreground">
+                            <th className="py-2 pe-4 text-start font-medium">
+                              {t.admin.providerStatus.title}
+                            </th>
+                            <th className="py-2 pe-4 text-start font-medium">
+                              {t.admin.cards.mostSelectedModels}
+                            </th>
+                            <th className="py-2 pe-4 text-start font-medium">
+                              {t.admin.cards.providerSuccessRate}
+                            </th>
+                            <th className="py-2 text-start font-medium">{t.admin.cards.avgResponseTime}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.adminStats.provider_execution.map((item) => (
+                            <tr key={item.provider_key} className="border-b border-border/50">
+                              <td className="py-2 pe-4">{item.provider_name_ar}</td>
+                              <td className="py-2 pe-4 tabular-nums">{item.selection_count}</td>
+                              <td className="py-2 pe-4">{formatPercent(item.success_rate)}</td>
+                              <td className="py-2">
+                                {item.avg_response_time_ms != null
+                                  ? `${item.avg_response_time_ms} ms`
+                                  : NA}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
+                  )}
+                </AdminDashboardCard>
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
+
+          <section className="space-y-4">
+            <AdminDashboardErrorBoundary>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AdminActivitySection activity={data?.recentActivity} loading={loading} />
+                <AdminExecutionErrors
+                  errors={data?.executionErrors}
+                  loading={loading}
+                  available={adminStatsAvailable}
+                />
+                <AdminErrorMonitoring
+                  errors={data?.errorMonitoring}
+                  loading={loading}
+                  diagnosticsAvailable={Boolean(data?.diagnosticsAvailable)}
+                />
+              </div>
+            </AdminDashboardErrorBoundary>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

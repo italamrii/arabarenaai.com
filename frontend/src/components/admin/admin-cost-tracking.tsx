@@ -9,12 +9,14 @@ interface AdminCostTrackingSectionProps {
   cost: AdminCostTracking | null | undefined;
   loading: boolean;
   available: boolean;
+  compact?: boolean;
 }
 
 export function AdminCostTrackingSection({
   cost,
   loading,
   available,
+  compact = false,
 }: AdminCostTrackingSectionProps) {
   const t = useTranslations();
   const NA = t.admin.notAvailable;
@@ -36,6 +38,28 @@ export function AdminCostTrackingSection({
         <AdminDashboardCard title={t.admin.cost.costToday} loading={loading}>
           <span className="text-sm text-muted-foreground">{NA}</span>
         </AdminDashboardCard>
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground flex items-center gap-2">
+          <Badge variant="secondary">{t.admin.cost.estimated}</Badge>
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <AdminDashboardCard title={t.admin.cost.costToday} loading={loading}>
+            <p className="text-2xl font-semibold tabular-nums">
+              {formatUsd(cost.estimated_cost_today_usd)}
+            </p>
+          </AdminDashboardCard>
+          <AdminDashboardCard title={t.admin.cost.costMonth} loading={loading}>
+            <p className="text-2xl font-semibold tabular-nums">
+              {formatUsd(cost.estimated_cost_month_usd)}
+            </p>
+          </AdminDashboardCard>
+        </div>
       </div>
     );
   }

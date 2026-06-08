@@ -8,12 +8,14 @@ interface AdminUsageSignalsSectionProps {
   signals: AdminUsageSignals | null | undefined;
   loading: boolean;
   available: boolean;
+  compact?: boolean;
 }
 
 export function AdminUsageSignalsSection({
   signals,
   loading,
   available,
+  compact = false,
 }: AdminUsageSignalsSectionProps) {
   const t = useTranslations();
   const NA = t.admin.notAvailable;
@@ -28,6 +30,29 @@ export function AdminUsageSignalsSection({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <AdminDashboardCard title={t.admin.usage.onlineNow} loading={loading}>
           <span className="text-sm text-muted-foreground">{NA}</span>
+        </AdminDashboardCard>
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <AdminDashboardCard title={t.admin.usage.onlineNow} loading={loading}>
+          <p className="text-2xl font-semibold tabular-nums">{formatValue(signals.online_now_5m)}</p>
+        </AdminDashboardCard>
+        <AdminDashboardCard title={t.admin.usage.comparisonsToday} loading={loading}>
+          <p className="text-2xl font-semibold tabular-nums">
+            {formatValue(signals.comparisons_today)}
+          </p>
+        </AdminDashboardCard>
+        <AdminDashboardCard title={t.admin.usage.votesToday} loading={loading}>
+          <p className="text-2xl font-semibold tabular-nums">{formatValue(signals.votes_today)}</p>
+        </AdminDashboardCard>
+        <AdminDashboardCard title={t.admin.usage.failedComparisonsToday} loading={loading}>
+          <p className="text-2xl font-semibold tabular-nums">
+            {formatValue(signals.failed_comparisons_today)}
+          </p>
         </AdminDashboardCard>
       </div>
     );

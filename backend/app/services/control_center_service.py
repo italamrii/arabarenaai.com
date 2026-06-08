@@ -90,6 +90,7 @@ class ControlCenterService:
                 .where(
                     Provider.key.in_(CONTROLLED_PROVIDER_KEYS),
                     AIModel.is_placeholder.is_(False),
+                    AIModel.is_archived.is_(False),
                 )
                 .order_by(Provider.key, AIModel.sort_order, AIModel.name_ar)
             ).unique().all()

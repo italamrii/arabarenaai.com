@@ -51,6 +51,7 @@ class ModelRepository:
         provider_key: str | None = None,
     ) -> list[AIModel]:
         stmt = select(AIModel).join(Provider).options(joinedload(AIModel.provider))
+        stmt = stmt.where(AIModel.is_archived.is_(False))
         if enabled_only:
             stmt = stmt.where(AIModel.is_enabled.is_(True), Provider.is_enabled.is_(True))
         else:

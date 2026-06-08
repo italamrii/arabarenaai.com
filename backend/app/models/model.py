@@ -26,6 +26,8 @@ class AIModel(Base, TimestampMixin):
     name_en: Mapped[str | None] = mapped_column(String(128), nullable=True)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_placeholder: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    supports_attachments: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     sort_order: Mapped[int] = mapped_column(default=0, nullable=False)
     max_tokens: Mapped[int] = mapped_column(default=4096, nullable=False)
     timeout_ms: Mapped[int] = mapped_column(default=30000, nullable=False)

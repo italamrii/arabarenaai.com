@@ -16,6 +16,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 UPLOADS_SQL_PATH = BACKEND_ROOT / "scripts" / "add_uploads.sql"
 PLATFORM_SETTINGS_SQL_PATH = BACKEND_ROOT / "scripts" / "add_platform_settings.sql"
 SESSION_PRESENCE_SQL_PATH = BACKEND_ROOT / "scripts" / "add_session_presence.sql"
+MODEL_REGISTRY_SQL_PATH = BACKEND_ROOT / "scripts" / "add_model_registry_fields.sql"
 
 CLAUDE_TARGET_KEY = "claude-sonnet-4-6"
 CLAUDE_LEGACY_KEYS = (
@@ -150,6 +151,35 @@ def _patch_platform_settings_schema(db: Session) -> None:
     )
 
 
+def _patch_model_registry_schema(db: Session) -> None:
+    sql_path = MODEL_REGISTRY_SQL_PATH
+    if not sql_path.is_file():
+        raise FileNotFoundError(f"Model registry SQL not found: {sql_path}")
+
+    bind = db.get_bind()
+    columns_before = {
+        column["name"]
+        for column in inspect(bind).get_columns("models")
+    } if inspect(bind).has_table("models") else set()
+
+    for stmt in _parse_sql_file(sql_path):
+        db.execute(text(stmt))
+    db.commit()
+
+    columns_after = {
+        column["name"]
+        for column in inspect(bind).get_columns("models")
+    } if inspect(bind).has_table("models") else set()
+
+    log_event(
+        logger,
+        "startup.patch.model_registry_fields.applied",
+        columns_before=sorted(columns_before),
+        columns_after=sorted(columns_after),
+        sql_path=str(sql_path),
+    )
+
+
 def _patch_session_presence_schema(db: Session) -> None:
     sql_path = SESSION_PRESENCE_SQL_PATH
     if not sql_path.is_file():
@@ -178,6 +208,7 @@ def apply_startup_patches() -> None:
         _patch_uploads_schema(db)
         _patch_platform_settings_schema(db)
         _patch_session_presence_schema(db)
+        _patch_model_registry_schema(db)
         _patch_claude_model_key(db)
         log_event(logger, "startup.patches.complete")
     except Exception as exc:

@@ -1,9 +1,11 @@
+import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.core.admin_auth import require_admin_access
 from app.core.dependencies import DbSession, RequestId
+from app.core.exceptions import NotFoundAppError
 from app.schemas.common import Envelope, to_meta
 from app.schemas.control_center import (
     ModelControlItem,
@@ -13,8 +15,17 @@ from app.schemas.control_center import (
     ProviderControlUpdate,
     ProviderControlsData,
 )
+from app.schemas.model_registry import (
+    ModelRegistryCreate,
+    ModelRegistryItem,
+    ModelRegistryListData,
+    ModelRegistryTestRequest,
+    ModelRegistryTestResult,
+    ModelRegistryUpdate,
+)
 from app.schemas.platform import MaintenanceModeData, MaintenanceModeUpdate
 from app.services.control_center_service import ControlCenterService
+from app.services.model_registry_service import ModelRegistryService
 from app.services.platform_settings_service import PlatformSettingsService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -112,3 +123,66 @@ def update_model_controls(
     service = ControlCenterService(db)
     item = service.update_model_control(model_key=payload.model_key, enabled=payload.enabled)
     return Envelope(data=item, meta=to_meta(request_id))
+
+
+@router.get("/model-registry")
+def get_model_registry(
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+    provider: str | None = Query(default=None),
+) -> Envelope[ModelRegistryListData]:
+    service = ModelRegistryService(db)
+    return Envelope(data=service.list_registry(provider_key=provider), meta=to_meta(request_id))
+
+
+@router.post("/model-registry")
+def create_model_registry_entry(
+    payload: ModelRegistryCreate,
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ModelRegistryItem]:
+    service = ModelRegistryService(db)
+    item = service.create_model(payload)
+    return Envelope(data=item, meta=to_meta(request_id))
+
+
+@router.put("/model-registry/{model_id}")
+def update_model_registry_entry(
+    model_id: str,
+    payload: ModelRegistryUpdate,
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ModelRegistryItem]:
+    try:
+        parsed = uuid.UUID(model_id)
+    except ValueError as exc:
+        raise NotFoundAppError(
+            message="النموذج غير موجود",
+            message_en="Model not found",
+        ) from exc
+    service = ModelRegistryService(db)
+    item = service.update_model(parsed, payload)
+    return Envelope(data=item, meta=to_meta(request_id))
+
+
+@router.post("/model-registry/{model_id}/test")
+async def test_model_registry_entry(
+    model_id: str,
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+    payload: ModelRegistryTestRequest | None = None,
+) -> Envelope[ModelRegistryTestResult]:
+    try:
+        parsed = uuid.UUID(model_id)
+    except ValueError as exc:
+        raise NotFoundAppError(
+            message="النموذج غير موجود",
+            message_en="Model not found",
+        ) from exc
+    service = ModelRegistryService(db)
+    result = await service.test_model(parsed, payload or ModelRegistryTestRequest())
+    return Envelope(data=result, meta=to_meta(request_id))
