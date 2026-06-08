@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.upload import Upload
 from app.models.vote import Vote
 from app.models.platform_setting import PlatformSetting
+from app.models.session_presence import SessionPresence
 
 __all__ = [
     "Agent",
@@ -25,4 +26,5 @@ __all__ = [
     "User",
     "Vote",
     "PlatformSetting",
+    "SessionPresence",
 ]

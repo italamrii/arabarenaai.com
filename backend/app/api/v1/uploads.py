@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Header, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, Request, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.core.config import get_settings
@@ -11,6 +11,7 @@ from app.core.exceptions import ForbiddenAppError, NotFoundAppError
 from app.core.session_tokens import verify_admin_secret
 from app.schemas.common import Envelope, to_meta
 from app.schemas.upload import UploadOut
+from app.services.presence_service import PresenceService
 from app.services.upload_service import UploadService
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -23,6 +24,7 @@ def _is_admin_request(x_admin_secret: str | None) -> bool:
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_upload(
+    request: Request,
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_comparisons)],
@@ -30,6 +32,12 @@ async def create_upload(
     file: UploadFile = File(...),
 ) -> Envelope[UploadOut]:
     settings = get_settings()
+    PresenceService.touch_from_request(
+        db,
+        session_id=session_id,
+        request=request,
+        path="/uploads",
+    )
     service = UploadService(db, settings)
     data = await file.read()
     row = service.create_upload(

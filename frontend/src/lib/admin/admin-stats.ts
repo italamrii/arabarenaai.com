@@ -55,6 +55,29 @@ export interface AdminUploadStats {
   pdfs: number;
 }
 
+export interface AdminProviderUsage {
+  provider_key: string;
+  provider_name_ar: string;
+  usage_count: number;
+}
+
+export interface AdminUsageSignals {
+  online_now_5m: number | null;
+  active_sessions_15m: number | null;
+  visitors_today: number | null;
+  comparisons_today: number | null;
+  votes_today: number | null;
+  uploads_today: number | null;
+  attachments_today: number | null;
+  model_responses_today: number | null;
+  most_used_models_today: AdminModelSelection[];
+  most_used_providers_today: AdminProviderUsage[];
+  failed_comparisons_today: number | null;
+  average_response_time_today: number | null;
+  total_input_tokens_today: number | null;
+  total_output_tokens_today: number | null;
+}
+
 export interface AdminStatsData {
   comparisons: AdminComparisonStats;
   uploads: AdminUploadStats;
@@ -64,4 +87,5 @@ export interface AdminStatsData {
   vote_preferences: AdminVotePreference[];
   recent_errors: AdminRecentError[];
   recent_activity: AdminRecentActivity[];
+  usage_signals: AdminUsageSignals;
 }

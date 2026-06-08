@@ -1,13 +1,14 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.core.dependencies import DbSession, OptionalSessionId, RequestId, rate_limit_votes
 from app.core.maintenance import require_platform_available
 from app.core.exceptions import NotFoundAppError
 from app.schemas.common import Envelope, to_meta
 from app.schemas.vote import VoteCreateRequest, VoteMeData, VoteOut
+from app.services.presence_service import PresenceService
 from app.services.vote_service import VoteService
 
 router = APIRouter()
@@ -20,11 +21,18 @@ router = APIRouter()
 def cast_vote(
     comparison_id: str,
     body: VoteCreateRequest,
+    request: Request,
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_votes)],
     _platform: Annotated[None, Depends(require_platform_available)],
 ) -> Envelope[VoteOut]:
+    PresenceService.touch_from_request(
+        db,
+        session_id=session_id,
+        request=request,
+        path="/votes",
+    )
     service = VoteService(db)
     try:
         parsed_comparison = uuid.UUID(comparison_id)

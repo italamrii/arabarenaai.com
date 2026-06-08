@@ -11,6 +11,7 @@ import { AdminExecutionErrors } from "@/components/admin/admin-execution-errors"
 import { AdminProviderStatus } from "@/components/admin/admin-provider-status";
 import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
+import { AdminUsageSignalsSection } from "@/components/admin/admin-usage-signals";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/locale-context";
@@ -265,9 +266,6 @@ export function AdminDashboard() {
               )}
             </AdminDashboardCard>
 
-            <AdminDashboardCard title={t.admin.cards.spendingLimits} loading={loading}>
-              <span className="text-sm text-muted-foreground">{t.admin.notAvailable}</span>
-            </AdminDashboardCard>
           </div>
         </AdminDashboardErrorBoundary>
       </section>
@@ -275,7 +273,12 @@ export function AdminDashboard() {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">{t.admin.cards.usageInsights}</h2>
         <AdminDashboardErrorBoundary>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <AdminUsageSignalsSection
+            signals={data?.adminStats?.usage_signals}
+            loading={loading}
+            available={adminStatsAvailable}
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
             <AdminDashboardCard title={t.admin.cards.totalVotes} loading={loading}>
               {formatValue(data?.adminStats?.total_votes ?? null)}
             </AdminDashboardCard>
@@ -302,46 +305,6 @@ export function AdminDashboard() {
             </AdminDashboardCard>
 
             <AdminDashboardCard
-              title={t.admin.cards.mostSelectedModels}
-              loading={loading}
-              skeletonLines={5}
-              className="sm:col-span-2"
-            >
-              {data?.adminStats?.most_selected_models?.length ? (
-                <ul className="space-y-1 text-sm">
-                  {data.adminStats.most_selected_models.map((item) => (
-                    <li key={item.model_id} className="flex justify-between gap-2">
-                      <span>{item.model_name_ar}</span>
-                      <span className="text-muted-foreground tabular-nums">{item.selection_count}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
-              )}
-            </AdminDashboardCard>
-
-            <AdminDashboardCard
-              title={t.admin.cards.votePreferences}
-              loading={loading}
-              skeletonLines={5}
-              className="sm:col-span-2"
-            >
-              {data?.adminStats?.vote_preferences?.length ? (
-                <ul className="space-y-1 text-sm">
-                  {data.adminStats.vote_preferences.map((item) => (
-                    <li key={item.model_id} className="flex justify-between gap-2">
-                      <span>{item.model_name_ar}</span>
-                      <span className="text-muted-foreground tabular-nums">{item.vote_count}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-sm text-muted-foreground">{t.admin.noDataYet}</span>
-              )}
-            </AdminDashboardCard>
-
-            <AdminDashboardCard
               title={t.admin.cards.providerSuccessRate}
               loading={loading}
               skeletonLines={6}
@@ -352,10 +315,12 @@ export function AdminDashboard() {
                   <table className="w-full min-w-[640px] text-sm">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
-                        <th className="py-2 pe-4 text-start font-medium">المزود</th>
-                        <th className="py-2 pe-4 text-start font-medium">الاستخدام</th>
-                        <th className="py-2 pe-4 text-start font-medium">معدل النجاح</th>
-                        <th className="py-2 text-start font-medium">متوسط زمن الاستجابة</th>
+                        <th className="py-2 pe-4 text-start font-medium">
+                          {t.admin.providerStatus.title}
+                        </th>
+                        <th className="py-2 pe-4 text-start font-medium">{t.admin.cards.mostSelectedModels}</th>
+                        <th className="py-2 pe-4 text-start font-medium">{t.admin.cards.providerSuccessRate}</th>
+                        <th className="py-2 text-start font-medium">{t.admin.cards.avgResponseTime}</th>
                       </tr>
                     </thead>
                     <tbody>

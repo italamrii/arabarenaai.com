@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
@@ -14,6 +14,7 @@ from app.schemas.common import Envelope, to_meta
 from app.schemas.comparison import ComparisonCreateRequest, ComparisonCreatedOut, ComparisonOut
 from app.services.comparison_service import ComparisonService
 from app.services.mappers import comparison_created_out, comparison_out
+from app.services.presence_service import PresenceService
 from app.services.vote_service import VoteService
 from app.observability.logging_config import log_event
 
@@ -58,12 +59,19 @@ async def _run_inference_task(comparison_id: uuid.UUID) -> None:
 async def create_comparison(
     body: ComparisonCreateRequest,
     background_tasks: BackgroundTasks,
+    request: Request,
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_comparisons)],
     _platform: Annotated[None, Depends(require_platform_available)],
 ) -> Envelope[ComparisonCreatedOut]:
     settings = get_settings()
+    PresenceService.touch_from_request(
+        db,
+        session_id=session_id,
+        request=request,
+        path="/comparisons",
+    )
     service = ComparisonService(db, settings, get_provider_registry())
     log_event(
         logger,
@@ -112,10 +120,18 @@ async def create_comparison(
 @router.get("/{comparison_id}", response_model=Envelope[ComparisonOut])
 def get_comparison(
     comparison_id: str,
+    request: Request,
     db: DbSession,
     request_id: RequestId,
     session_id: OptionalSessionId,
 ) -> Envelope[ComparisonOut]:
+    if session_id:
+        PresenceService.touch_from_request(
+            db,
+            session_id=session_id,
+            request=request,
+            path="/comparisons/poll",
+        )
     service = ComparisonService(db, get_settings(), get_provider_registry())
     try:
         parsed = uuid.UUID(comparison_id)
