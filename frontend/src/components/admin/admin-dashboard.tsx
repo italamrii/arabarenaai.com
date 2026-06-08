@@ -12,6 +12,7 @@ import { AdminProviderStatus } from "@/components/admin/admin-provider-status";
 import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
 import { AdminCostTrackingSection } from "@/components/admin/admin-cost-tracking";
+import { AdminProviderBillingLinks } from "@/components/admin/admin-provider-billing-links";
 import { AdminUsageSignalsSection } from "@/components/admin/admin-usage-signals";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -279,6 +280,13 @@ export function AdminDashboard() {
             loading={loading}
             available={adminStatsAvailable}
           />
+        </AdminDashboardErrorBoundary>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{t.admin.billingLinks.sectionTitle}</h2>
+        <AdminDashboardErrorBoundary>
+          <AdminProviderBillingLinks />
         </AdminDashboardErrorBoundary>
       </section>
 

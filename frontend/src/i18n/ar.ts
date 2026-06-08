@@ -548,6 +548,20 @@ export const ar = {
       images: "صور",
       pdfs: "PDF",
     },
+    billingLinks: {
+      sectionTitle: "روابط شحن ومراقبة المزودين",
+      note: "يتم الدفع وإدارة الفواتير من مواقع المزودين الرسمية. ArabArenaAI يعرض التكلفة تقديرياً فقط.",
+      openUsage: "فتح صفحة الاستخدام",
+      openLink: "فتح {provider} في تبويب جديد",
+      providers: {
+        openai: "OpenAI Billing / Usage",
+        anthropic: "Anthropic Console / Usage",
+        google: "Google AI Studio / Billing",
+        googleBilling: "Google Cloud Billing",
+        deepseek: "DeepSeek Platform",
+        xai: "xAI Console",
+      },
+    },
     cost: {
       sectionTitle: "تتبع التكلفة",
       estimated: "تقديري",

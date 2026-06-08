@@ -550,6 +550,20 @@ export const en = {
       images: "Images",
       pdfs: "PDF",
     },
+    billingLinks: {
+      sectionTitle: "Provider Billing & Usage Links",
+      note: "Billing and payments are managed on provider websites. ArabArenaAI only shows estimated costs.",
+      openUsage: "Open usage page",
+      openLink: "Open {provider} in a new tab",
+      providers: {
+        openai: "OpenAI Billing / Usage",
+        anthropic: "Anthropic Console / Usage",
+        google: "Google AI Studio / Billing",
+        googleBilling: "Google Cloud Billing",
+        deepseek: "DeepSeek Platform",
+        xai: "xAI Console",
+      },
+    },
     cost: {
       sectionTitle: "Cost Tracking",
       estimated: "Estimated",
