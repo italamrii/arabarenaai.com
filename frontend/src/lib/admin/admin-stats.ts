@@ -61,6 +61,55 @@ export interface AdminProviderUsage {
   usage_count: number;
 }
 
+export interface AdminCostByProvider {
+  provider_key: string;
+  provider_name_ar: string;
+  estimated_cost_usd: number | null;
+  input_tokens: number;
+  output_tokens: number;
+  response_count: number;
+}
+
+export interface AdminCostByModel {
+  model_key: string;
+  model_name_ar: string;
+  provider_key: string;
+  estimated_cost_usd: number | null;
+  input_tokens: number;
+  output_tokens: number;
+  response_count: number;
+}
+
+export interface AdminMissingPricingModel {
+  model_key: string;
+  model_name_ar: string;
+  provider_key: string;
+}
+
+export interface AdminMostExpensive {
+  provider_key: string | null;
+  provider_name_ar: string | null;
+  model_key: string | null;
+  model_name_ar: string | null;
+  estimated_cost_usd: number | null;
+}
+
+export interface AdminCostTracking {
+  estimated_cost_today_usd: number | null;
+  estimated_cost_month_usd: number | null;
+  input_tokens_today: number | null;
+  output_tokens_today: number | null;
+  input_tokens_month: number | null;
+  output_tokens_month: number | null;
+  cost_by_provider_today: AdminCostByProvider[];
+  cost_by_model_today: AdminCostByModel[];
+  most_expensive_provider_today: AdminMostExpensive | null;
+  most_expensive_model_today: AdminMostExpensive | null;
+  average_cost_per_comparison_today: number | null;
+  comparisons_with_cost_today: number | null;
+  missing_pricing_models: AdminMissingPricingModel[];
+}
+
 export interface AdminUsageSignals {
   online_now_5m: number | null;
   active_sessions_15m: number | null;
@@ -88,4 +137,5 @@ export interface AdminStatsData {
   recent_errors: AdminRecentError[];
   recent_activity: AdminRecentActivity[];
   usage_signals: AdminUsageSignals;
+  cost_tracking: AdminCostTracking;
 }

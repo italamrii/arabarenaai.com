@@ -64,6 +64,55 @@ class ProviderUsageOut(BaseModel):
     usage_count: int
 
 
+class CostByProviderOut(BaseModel):
+    provider_key: str
+    provider_name_ar: str
+    estimated_cost_usd: float | None = None
+    input_tokens: int = 0
+    output_tokens: int = 0
+    response_count: int = 0
+
+
+class CostByModelOut(BaseModel):
+    model_key: str
+    model_name_ar: str
+    provider_key: str
+    estimated_cost_usd: float | None = None
+    input_tokens: int = 0
+    output_tokens: int = 0
+    response_count: int = 0
+
+
+class MissingPricingModelOut(BaseModel):
+    model_key: str
+    model_name_ar: str
+    provider_key: str
+
+
+class MostExpensiveOut(BaseModel):
+    provider_key: str | None = None
+    provider_name_ar: str | None = None
+    model_key: str | None = None
+    model_name_ar: str | None = None
+    estimated_cost_usd: float | None = None
+
+
+class CostTrackingOut(BaseModel):
+    estimated_cost_today_usd: float | None = None
+    estimated_cost_month_usd: float | None = None
+    input_tokens_today: int | None = None
+    output_tokens_today: int | None = None
+    input_tokens_month: int | None = None
+    output_tokens_month: int | None = None
+    cost_by_provider_today: list[CostByProviderOut] = []
+    cost_by_model_today: list[CostByModelOut] = []
+    most_expensive_provider_today: MostExpensiveOut | None = None
+    most_expensive_model_today: MostExpensiveOut | None = None
+    average_cost_per_comparison_today: float | None = None
+    comparisons_with_cost_today: int | None = None
+    missing_pricing_models: list[MissingPricingModelOut] = []
+
+
 class UsageSignalsOut(BaseModel):
     online_now_5m: int | None = None
     active_sessions_15m: int | None = None
@@ -91,3 +140,4 @@ class AdminStatsData(BaseModel):
     recent_errors: list[RecentErrorOut]
     recent_activity: list[RecentActivityOut]
     usage_signals: UsageSignalsOut
+    cost_tracking: CostTrackingOut

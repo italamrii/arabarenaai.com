@@ -19,6 +19,7 @@ from app.observability.logging_config import log_event
 from app.schemas.admin_stats import (
     AdminStatsData,
     ComparisonStatsOut,
+    CostTrackingOut,
     ModelSelectionOut,
     ProviderExecutionOut,
     ProviderUsageOut,
@@ -28,6 +29,7 @@ from app.schemas.admin_stats import (
     UsageSignalsOut,
     VotePreferenceOut,
 )
+from app.services.cost_tracking_service import CostTrackingService
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -63,6 +65,14 @@ class AdminStatsService:
             recent_errors=self._recent_errors(),
             recent_activity=self._recent_activity(),
             usage_signals=self._usage_signals(),
+            cost_tracking=self._cost_tracking(),
+        )
+
+    def _cost_tracking(self) -> CostTrackingOut:
+        return self._safe_metric(
+            "cost_tracking",
+            lambda: CostTrackingService(self.db).get_cost_tracking(),
+            CostTrackingOut(),
         )
 
     def _safe_metric(self, name: str, fn: Callable[[], T], default: T) -> T:

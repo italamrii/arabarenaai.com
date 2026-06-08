@@ -11,6 +11,7 @@ import { AdminExecutionErrors } from "@/components/admin/admin-execution-errors"
 import { AdminProviderStatus } from "@/components/admin/admin-provider-status";
 import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
+import { AdminCostTrackingSection } from "@/components/admin/admin-cost-tracking";
 import { AdminUsageSignalsSection } from "@/components/admin/admin-usage-signals";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -267,6 +268,17 @@ export function AdminDashboard() {
             </AdminDashboardCard>
 
           </div>
+        </AdminDashboardErrorBoundary>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{t.admin.cost.sectionTitle}</h2>
+        <AdminDashboardErrorBoundary>
+          <AdminCostTrackingSection
+            cost={data?.adminStats?.cost_tracking}
+            loading={loading}
+            available={adminStatsAvailable}
+          />
         </AdminDashboardErrorBoundary>
       </section>
 
