@@ -550,6 +550,18 @@ export const en = {
       images: "Images",
       pdfs: "PDF",
     },
+    controlCenter: {
+      sectionTitle: "Provider & Model Control Center",
+      providerSection: "Provider controls",
+      modelSection: "Model controls",
+      status: "Status",
+      enabled: "Enabled",
+      disabled: "Disabled",
+      enable: "Enable",
+      disable: "Disable",
+      loadFailed: "Could not load control settings",
+      saveFailed: "Could not save control settings",
+    },
     billingLinks: {
       sectionTitle: "Provider Billing & Usage Links",
       note: "Billing and payments are managed on provider websites. ArabArenaAI only shows estimated costs.",

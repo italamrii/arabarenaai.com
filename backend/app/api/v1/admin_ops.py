@@ -5,7 +5,16 @@ from fastapi import APIRouter, Depends
 from app.core.admin_auth import require_admin_access
 from app.core.dependencies import DbSession, RequestId
 from app.schemas.common import Envelope, to_meta
+from app.schemas.control_center import (
+    ModelControlItem,
+    ModelControlUpdate,
+    ModelControlsData,
+    ProviderControlItem,
+    ProviderControlUpdate,
+    ProviderControlsData,
+)
 from app.schemas.platform import MaintenanceModeData, MaintenanceModeUpdate
+from app.services.control_center_service import ControlCenterService
 from app.services.platform_settings_service import PlatformSettingsService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -56,3 +65,50 @@ def update_maintenance_mode(
         ),
         meta=to_meta(request_id),
     )
+
+
+@router.get("/provider-controls")
+def get_provider_controls(
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ProviderControlsData]:
+    service = ControlCenterService(db)
+    return Envelope(data=service.get_provider_controls(), meta=to_meta(request_id))
+
+
+@router.put("/provider-controls")
+def update_provider_controls(
+    payload: ProviderControlUpdate,
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ProviderControlItem]:
+    service = ControlCenterService(db)
+    item = service.update_provider_control(
+        provider_key=payload.provider_key,
+        enabled=payload.enabled,
+    )
+    return Envelope(data=item, meta=to_meta(request_id))
+
+
+@router.get("/model-controls")
+def get_model_controls(
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ModelControlsData]:
+    service = ControlCenterService(db)
+    return Envelope(data=service.get_model_controls(), meta=to_meta(request_id))
+
+
+@router.put("/model-controls")
+def update_model_controls(
+    payload: ModelControlUpdate,
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[ModelControlItem]:
+    service = ControlCenterService(db)
+    item = service.update_model_control(model_key=payload.model_key, enabled=payload.enabled)
+    return Envelope(data=item, meta=to_meta(request_id))

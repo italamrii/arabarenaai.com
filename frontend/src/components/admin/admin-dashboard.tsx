@@ -11,6 +11,7 @@ import { AdminExecutionErrors } from "@/components/admin/admin-execution-errors"
 import { AdminProviderStatus } from "@/components/admin/admin-provider-status";
 import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
+import { AdminControlCenter } from "@/components/admin/admin-control-center";
 import { AdminCostTrackingSection } from "@/components/admin/admin-cost-tracking";
 import { AdminProviderBillingLinks } from "@/components/admin/admin-provider-billing-links";
 import { AdminUsageSignalsSection } from "@/components/admin/admin-usage-signals";
@@ -116,6 +117,13 @@ export function AdminDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <AdminSystemControls />
           </div>
+        </AdminDashboardErrorBoundary>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{t.admin.controlCenter.sectionTitle}</h2>
+        <AdminDashboardErrorBoundary>
+          <AdminControlCenter />
         </AdminDashboardErrorBoundary>
       </section>
 

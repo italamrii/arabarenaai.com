@@ -21,6 +21,9 @@ from app.observability.logging_config import log_event, log_exception_event
 from app.observability.metrics import get_metrics
 from app.providers.errors import ProviderCallError, ProviderErrorDetails, extract_provider_error
 from app.services.attachment_resolver import IMAGE_UNSUPPORTED_AR, resolve_for_provider
+
+PROVIDER_DISABLED_AR = "المزود معطل مؤقتاً"
+MODEL_DISABLED_AR = "النموذج معطل مؤقتاً"
 from app.services.category_service import CategoryService, ResolvedCategory
 from app.services.upload_service import UploadService
 
@@ -290,6 +293,30 @@ class ComparisonService:
             adapter_configured=bool(adapter and adapter.is_configured()),
             is_placeholder=model.is_placeholder,
         )
+        if not model.provider.is_enabled:
+            details = ProviderErrorDetails(
+                error_code="provider_disabled",
+                error_message_debug="Provider temporarily disabled",
+                provider_key=provider_key,
+                model_key=model.key,
+                exception_class="ProviderDisabled",
+            )
+            payload = self._error_payload(details)
+            payload["error_message"] = PROVIDER_DISABLED_AR
+            return response_id, payload
+
+        if not model.is_enabled:
+            details = ProviderErrorDetails(
+                error_code="model_disabled",
+                error_message_debug="Model temporarily disabled",
+                provider_key=provider_key,
+                model_key=model.key,
+                exception_class="ModelDisabled",
+            )
+            payload = self._error_payload(details)
+            payload["error_message"] = MODEL_DISABLED_AR
+            return response_id, payload
+
         if adapter is None or not adapter.is_configured() or model.is_placeholder:
             get_metrics().record_provider_failure(
                 provider_key,
@@ -407,11 +434,17 @@ class ComparisonService:
 
     @staticmethod
     def _validate_model(model: AIModel) -> None:
-        if not model.is_enabled or not model.provider.is_enabled:
+        if not model.provider.is_enabled:
             raise UnprocessableAppError(
-                code="MODEL_NOT_AVAILABLE",
-                message="النموذج غير متاح",
-                message_en="Model is disabled",
+                code="PROVIDER_DISABLED",
+                message=PROVIDER_DISABLED_AR,
+                message_en="Provider temporarily disabled",
+            )
+        if not model.is_enabled:
+            raise UnprocessableAppError(
+                code="MODEL_DISABLED",
+                message=MODEL_DISABLED_AR,
+                message_en="Model temporarily disabled",
             )
         if model.is_placeholder:
             raise UnprocessableAppError(

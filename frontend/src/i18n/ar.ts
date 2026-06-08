@@ -548,6 +548,18 @@ export const ar = {
       images: "صور",
       pdfs: "PDF",
     },
+    controlCenter: {
+      sectionTitle: "مركز التحكم بالنماذج والمزودين",
+      providerSection: "التحكم بالمزودين",
+      modelSection: "التحكم بالنماذج",
+      status: "الحالة",
+      enabled: "مفعّل",
+      disabled: "معطّل",
+      enable: "تفعيل",
+      disable: "تعطيل",
+      loadFailed: "تعذر تحميل إعدادات التحكم",
+      saveFailed: "تعذر حفظ إعدادات التحكم",
+    },
     billingLinks: {
       sectionTitle: "روابط شحن ومراقبة المزودين",
       note: "يتم الدفع وإدارة الفواتير من مواقع المزودين الرسمية. ArabArenaAI يعرض التكلفة تقديرياً فقط.",
