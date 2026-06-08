@@ -2,24 +2,43 @@ import type { Metadata } from "next";
 
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import { LegalSection } from "@/components/legal/legal-section";
-import { ar } from "@/i18n/ar";
+import { getServerLocale, getServerMessages } from "@/i18n/server";
 import { createPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = createPageMetadata({
-  title: ar.seo.terms.title,
-  description: ar.seo.terms.description,
-  path: "/terms",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getServerMessages();
+  const locale = await getServerLocale();
+  return createPageMetadata({
+    title: t.seo.terms.title,
+    description: t.seo.terms.description,
+    path: "/terms",
+    locale,
+  });
+}
 
-export default function TermsPage() {
-  const { terms } = ar;
+export default async function TermsPage() {
+  const t = await getServerMessages();
+  const { terms } = t;
 
   return (
     <LegalPageLayout title={terms.title} subtitle={terms.subtitle} intro={terms.intro}>
       <LegalSection title={terms.sections.acceptableUse.title} items={terms.sections.acceptableUse.items} />
       <LegalSection
+        title={terms.sections.userContent.title}
+        paragraphs={terms.sections.userContent.paragraphs}
+        items={terms.sections.userContent.items}
+      />
+      <LegalSection
+        title={terms.sections.independence.title}
+        paragraphs={terms.sections.independence.paragraphs}
+      />
+      <LegalSection
         title={terms.sections.noAccuracyGuarantee.title}
         paragraphs={terms.sections.noAccuracyGuarantee.paragraphs}
+      />
+      <LegalSection
+        title={terms.sections.notProfessionalAdvice.title}
+        paragraphs={terms.sections.notProfessionalAdvice.paragraphs}
       />
       <LegalSection
         title={terms.sections.availability.title}

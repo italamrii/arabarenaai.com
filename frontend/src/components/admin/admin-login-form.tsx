@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 
 interface AdminLoginFormProps {
   configured: boolean;
 }
 
 export function AdminLoginForm({ configured }: AdminLoginFormProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,10 +24,10 @@ export function AdminLoginForm({ configured }: AdminLoginFormProps) {
     return (
       <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>{ar.admin.loginTitle}</CardTitle>
+          <CardTitle>{t.admin.loginTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{ar.admin.notConfigured}</p>
+          <p className="text-sm text-muted-foreground">{t.admin.notConfigured}</p>
         </CardContent>
       </Card>
     );
@@ -45,19 +46,19 @@ export function AdminLoginForm({ configured }: AdminLoginFormProps) {
       });
 
       if (response.status === 503) {
-        setError(ar.admin.notConfigured);
+        setError(t.admin.notConfigured);
         return;
       }
 
       if (!response.ok) {
-        setError(ar.admin.invalidCredentials);
+        setError(t.admin.invalidCredentials);
         return;
       }
 
       router.push("/admin/dashboard");
       router.refresh();
     } catch {
-      setError(ar.admin.invalidCredentials);
+      setError(t.admin.invalidCredentials);
     } finally {
       setLoading(false);
       setPassword("");
@@ -67,12 +68,12 @@ export function AdminLoginForm({ configured }: AdminLoginFormProps) {
   return (
     <Card className="max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>{ar.admin.loginTitle}</CardTitle>
+        <CardTitle>{t.admin.loginTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-password">{ar.admin.passwordLabel}</Label>
+            <Label htmlFor="admin-password">{t.admin.passwordLabel}</Label>
             <Input
               id="admin-password"
               type="password"
@@ -85,7 +86,7 @@ export function AdminLoginForm({ configured }: AdminLoginFormProps) {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" disabled={loading} className="w-full">
-            {ar.admin.login}
+            {t.admin.login}
           </Button>
         </form>
       </CardContent>

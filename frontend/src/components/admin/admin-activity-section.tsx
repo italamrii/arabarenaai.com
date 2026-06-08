@@ -1,5 +1,7 @@
+"use client";
+
 import { AdminDashboardCard } from "@/components/admin/admin-dashboard-card";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 import type { RecentActivityItem } from "@/lib/admin/activity";
 
 interface AdminActivitySectionProps {
@@ -8,11 +10,12 @@ interface AdminActivitySectionProps {
 }
 
 export function AdminActivitySection({ activity, loading }: AdminActivitySectionProps) {
+  const t = useTranslations();
   const items = Array.isArray(activity) ? activity : [];
 
   return (
     <AdminDashboardCard
-      title={ar.admin.recentActivity.title}
+      title={t.admin.recentActivity.title}
       loading={loading}
       skeletonLines={3}
       className="sm:col-span-2 lg:col-span-3"
@@ -23,12 +26,12 @@ export function AdminActivitySection({ activity, loading }: AdminActivitySection
             <thead>
               <tr className="border-b border-border text-muted-foreground">
                 <th className="py-2 pe-4 text-start font-medium">
-                  {ar.admin.recentActivity.timestamp}
+                  {t.admin.recentActivity.timestamp}
                 </th>
                 <th className="py-2 pe-4 text-start font-medium">
-                  {ar.admin.recentActivity.activityType}
+                  {t.admin.recentActivity.activityType}
                 </th>
-                <th className="py-2 text-start font-medium">{ar.admin.recentActivity.status}</th>
+                <th className="py-2 text-start font-medium">{t.admin.recentActivity.status}</th>
               </tr>
             </thead>
             <tbody>
@@ -43,7 +46,7 @@ export function AdminActivitySection({ activity, loading }: AdminActivitySection
           </table>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{ar.admin.recentActivity.empty}</p>
+        <p className="text-sm text-muted-foreground">{t.admin.recentActivity.empty}</p>
       )}
     </AdminDashboardCard>
   );

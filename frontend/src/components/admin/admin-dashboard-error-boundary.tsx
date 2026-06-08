@@ -2,6 +2,8 @@
 
 import { Component, type ReactNode } from "react";
 
+import { AdminSectionErrorFallback } from "@/components/admin/admin-section-error-fallback";
+
 interface AdminDashboardErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
@@ -24,9 +26,7 @@ export class AdminDashboardErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        this.props.fallback ?? (
-          <p className="text-sm text-muted-foreground">تعذر عرض هذا القسم.</p>
-        )
+        this.props.fallback ?? <AdminSectionErrorFallback />
       );
     }
 

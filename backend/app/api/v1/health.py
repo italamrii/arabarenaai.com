@@ -16,11 +16,12 @@ from sqlalchemy import text
 
 from app.core.database import engine
 
-from app.core.dependencies import AppSettings, ProviderRegistryDep, RequestId
+from app.core.dependencies import AppSettings, DbSession, ProviderRegistryDep, RequestId
 
 from app.observability.logging_config import log_event
 
 from app.observability.metrics import get_metrics
+from app.services.admin_stats_service import AdminStatsService
 
 from app.schemas.common import Envelope, to_meta
 
@@ -40,6 +41,7 @@ from app.schemas.observability import (
 
 )
 
+from app.schemas.admin_stats import AdminStatsData
 from app.schemas.session import (
 
     EnvDebugData,
@@ -191,6 +193,13 @@ async def providers_health(
         meta=to_meta(request_id),
 
     )
+
+
+@router.get("/admin-stats")
+def admin_stats(db: DbSession, request_id: RequestId) -> Envelope[AdminStatsData]:
+    """DB-backed operational stats for the admin dashboard (no PII)."""
+    service = AdminStatsService(db)
+    return Envelope(data=service.get_stats(), meta=to_meta(request_id))
 
 
 @router.post("/providers/reset-circuit-breakers")

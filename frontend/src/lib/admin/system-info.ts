@@ -1,13 +1,17 @@
 import packageJson from "../../../package.json";
 
+import { getApiBaseUrl } from "@/lib/api/base-url";
+
 export interface SystemOverview {
   applicationVersion: string | null;
   gitCommit: string | null;
   lastDeploymentTime: string | null;
   environment: string | null;
+  apiBaseUrl: string | null;
+  refreshedAt: string | null;
 }
 
-const NOT_AVAILABLE = "Not Available";
+const NOT_AVAILABLE_AR = "غير متوفر";
 
 function readOptionalEnv(...keys: string[]): string | null {
   for (const key of keys) {
@@ -35,6 +39,17 @@ function formatGitCommit(raw: string | null): string | null {
   return trimmed.length > 12 ? trimmed.slice(0, 12) : trimmed;
 }
 
+function formatDeploymentTime(raw: string | null): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const parsed = Date.parse(trimmed);
+  if (!Number.isNaN(parsed)) {
+    return new Date(parsed).toISOString();
+  }
+  return trimmed;
+}
+
 export function loadSystemOverview(backendVersion: string | null | undefined): SystemOverview {
   try {
     const applicationVersion =
@@ -45,17 +60,28 @@ export function loadSystemOverview(backendVersion: string | null | undefined): S
       readOptionalEnv("VERCEL_GIT_COMMIT_SHA", "GIT_COMMIT", "COMMIT_SHA"),
     );
 
-    const lastDeploymentTime = readOptionalEnv(
-      "BUILD_TIMESTAMP",
-      "DEPLOYMENT_TIMESTAMP",
-      "VERCEL_DEPLOYMENT_CREATED_AT",
+    const lastDeploymentTime = formatDeploymentTime(
+      readOptionalEnv(
+        "BUILD_TIMESTAMP",
+        "DEPLOYMENT_TIMESTAMP",
+        "VERCEL_DEPLOYMENT_CREATED_AT",
+      ),
     );
+
+    let apiBaseUrl: string | null = null;
+    try {
+      apiBaseUrl = getApiBaseUrl();
+    } catch {
+      apiBaseUrl = null;
+    }
 
     return {
       applicationVersion: applicationVersion || null,
       gitCommit,
       lastDeploymentTime,
       environment: resolveEnvironment(),
+      apiBaseUrl,
+      refreshedAt: new Date().toISOString(),
     };
   } catch {
     return {
@@ -63,11 +89,13 @@ export function loadSystemOverview(backendVersion: string | null | undefined): S
       gitCommit: null,
       lastDeploymentTime: null,
       environment: null,
+      apiBaseUrl: null,
+      refreshedAt: new Date().toISOString(),
     };
   }
 }
 
 export function displaySystemValue(value: string | null | undefined): string {
-  if (!value || !value.trim()) return NOT_AVAILABLE;
+  if (!value || !value.trim()) return NOT_AVAILABLE_AR;
   return value.trim();
 }

@@ -26,9 +26,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCategories } from "@/hooks/use-categories";
 import { usePreferences, usePreferencesSummary } from "@/hooks/use-analytics";
 import { cn } from "@/lib/utils";
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { localizedName } from "@/lib/i18n/display";
 
 export default function InsightsPage() {
+  const t = useTranslations();
+  const { locale } = useLocale();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { data: categoriesData } = useCategories();
   const { data: summary, isLoading: loadingSummary } = usePreferencesSummary();
@@ -39,7 +42,7 @@ export default function InsightsPage() {
 
   return (
     <Container className="py-10 sm:py-14">
-      <PageHeader title={ar.insights.title} subtitle={ar.insights.subtitle} className="mb-8" />
+      <PageHeader title={t.insights.title} subtitle={t.insights.subtitle} className="mb-8" />
 
       <ErrorBoundary>
         <div className="space-y-8 animate-fade-in">
@@ -62,7 +65,7 @@ export default function InsightsPage() {
                     : "border-border text-muted-foreground hover:text-foreground",
                 )}
               >
-                {ar.insights.overall}
+                {t.insights.overall}
               </button>
               {categoriesData?.categories.map((cat) => (
                 <button
@@ -76,7 +79,7 @@ export default function InsightsPage() {
                       : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {cat.name_ar}
+                  {localizedName(cat, locale)}
                 </button>
               ))}
             </div>
@@ -84,7 +87,7 @@ export default function InsightsPage() {
             {displayData && (
               <Card className="mt-4">
                 <CardContent className="p-4 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{ar.insights.totalVotes}</span>
+                  <span className="text-sm text-muted-foreground">{t.insights.totalVotes}</span>
                   <Badge variant="default">{displayData.total_votes}</Badge>
                 </CardContent>
               </Card>
@@ -98,8 +101,8 @@ export default function InsightsPage() {
                   data={displayData.preferences}
                   title={
                     activeCategory
-                      ? `${ar.insights.preferenceShare} — ${displayData.category?.name_ar ?? ""}`
-                      : ar.insights.preferenceShare
+                      ? `${t.insights.preferenceShare} — ${displayData.category ? localizedName(displayData.category, locale) : ""}`
+                      : t.insights.preferenceShare
                   }
                 />
               ) : null}
@@ -116,7 +119,7 @@ export default function InsightsPage() {
 
           {!activeCategory && summary && (
             <section className="space-y-4 pt-8 border-t border-border">
-              <h2 className="text-xl font-semibold">{ar.insights.byCategory}</h2>
+              <h2 className="text-xl font-semibold">{t.insights.byCategory}</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {summary.by_category.map((item) => (
                   <Card
@@ -125,9 +128,9 @@ export default function InsightsPage() {
                     onClick={() => setActiveCategory(item.category.key)}
                   >
                     <CardContent className="p-4">
-                      <p className="font-medium">{item.category.name_ar}</p>
+                      <p className="font-medium">{localizedName(item.category, locale)}</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {item.total_votes} {ar.insights.totalVotes.toLowerCase()}
+                        {item.total_votes} {t.insights.totalVotes.toLowerCase()}
                       </p>
                     </CardContent>
                   </Card>

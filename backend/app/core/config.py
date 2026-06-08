@@ -129,6 +129,9 @@ class Settings(BaseSettings):
     max_prompt_chars: int = 1000
     provider_max_tokens: int = 1600
 
+    upload_dir: str = "data/uploads"
+    max_upload_bytes: int = 20 * 1024 * 1024
+
 
 
     rate_limit_comparisons_per_hour: int = 10
@@ -222,6 +225,13 @@ class Settings(BaseSettings):
         return bool(self.openai_api_key)
 
 
+
+    @property
+    def upload_dir_path(self) -> Path:
+        path = Path(self.upload_dir)
+        if not path.is_absolute():
+            path = BACKEND_ROOT / path
+        return path
 
     @property
 

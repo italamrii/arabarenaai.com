@@ -5,26 +5,33 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PreferenceItem } from "@/lib/api/types";
 import { formatPercent } from "@/lib/utils";
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { localizedName } from "@/lib/i18n/display";
 
 interface PreferenceChartProps {
   data: PreferenceItem[];
   title?: string;
 }
 
-export function PreferenceChart({ data, title = ar.insights.preferenceShare }: PreferenceChartProps) {
+export function PreferenceChart({ data, title }: PreferenceChartProps) {
+  const t = useTranslations();
+  const { locale } = useLocale();
+  const chartTitle = title ?? t.insights.preferenceShare;
+
   if (data.length === 0) {
     return (
       <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">{ar.insights.noData}</CardContent>
+        <CardContent className="py-16 text-center text-muted-foreground">{t.insights.noData}</CardContent>
       </Card>
     );
   }
 
   const chartData = [...data]
-    .sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar"))
+    .sort((a, b) =>
+      localizedName(a, locale).localeCompare(localizedName(b, locale), locale === "ar" ? "ar" : "en"),
+    )
     .map((item) => ({
-      name: item.name_ar,
+      name: localizedName(item, locale),
       share: item.preference_share_pct,
       votes: item.vote_count,
     }));
@@ -32,7 +39,7 @@ export function PreferenceChart({ data, title = ar.insights.preferenceShare }: P
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
+        <CardTitle className="text-base">{chartTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[320px] w-full" dir="ltr">
@@ -61,7 +68,7 @@ export function PreferenceChart({ data, title = ar.insights.preferenceShare }: P
                 }}
                 formatter={(value: number, _name, props) => [
                   `${formatPercent(value)} (${(props.payload as { votes: number }).votes} صوت)`,
-                  ar.insights.preferenceShare,
+                  t.insights.preferenceShare,
                 ]}
               />
               <Bar dataKey="share" fill="#00D4FF" radius={[4, 4, 0, 0]} maxBarSize={48} />

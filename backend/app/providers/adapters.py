@@ -8,6 +8,12 @@ from app.core.config import get_settings
 from app.observability.logging_config import api_key_log_fields, log_event, log_exception_event
 from app.providers.base import CompletionResult, HealthResult
 from app.providers.errors import ProviderCallError, extract_provider_error
+from app.domain.attachments import AttachmentInput
+from app.providers.multimodal import (
+    anthropic_user_content,
+    google_user_parts,
+    openai_user_content,
+)
 from app.providers.openai_utils import build_chat_completion_kwargs, normalize_prompt
 
 logger = logging.getLogger(__name__)
@@ -45,6 +51,7 @@ class OpenAIAdapter:
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: AttachmentInput | None = None,
     ) -> CompletionResult:
         client = self._get_client()
         if not client:
@@ -55,6 +62,7 @@ class OpenAIAdapter:
                 model_key=model_key,
                 prompt=prompt,
                 max_tokens=max_tokens,
+                user_content=openai_user_content(prompt, attachment),
             )
         except ValueError as exc:
             details = extract_provider_error(
@@ -201,11 +209,13 @@ class OpenAICompatibleAdapter:
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: AttachmentInput | None = None,
     ) -> CompletionResult:
         client = self._get_client()
         if not client:
             raise RuntimeError(f"{self.key} API key not configured")
         api_key = self._api_key()
+        user_content = openai_user_content(prompt, attachment) if attachment else prompt
         log_event(
             logger,
             "provider.request.starting",
@@ -220,7 +230,7 @@ class OpenAICompatibleAdapter:
         try:
             response = await client.chat.completions.create(
                 model=model_key,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": user_content}],
                 max_tokens=max_tokens,
                 timeout=timeout_ms / 1000,
             )
@@ -272,10 +282,12 @@ class AnthropicAdapter:
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: AttachmentInput | None = None,
     ) -> CompletionResult:
         api_key = self._api_key()
         if not api_key:
             raise RuntimeError("Anthropic API key not configured")
+        user_content = anthropic_user_content(prompt, attachment)
         log_event(
             logger,
             "provider.request.starting",
@@ -299,7 +311,7 @@ class AnthropicAdapter:
                     json={
                         "model": model_key,
                         "max_tokens": max_tokens,
-                        "messages": [{"role": "user", "content": prompt}],
+                        "messages": [{"role": "user", "content": user_content}],
                     },
                 )
                 response.raise_for_status()
@@ -353,10 +365,12 @@ class GoogleAdapter:
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: AttachmentInput | None = None,
     ) -> CompletionResult:
         api_key = self._api_key()
         if not api_key:
             raise RuntimeError("Google API key not configured")
+        parts = google_user_parts(prompt, attachment)
         log_event(
             logger,
             "provider.request.starting",
@@ -378,7 +392,7 @@ class GoogleAdapter:
                     url,
                     params={"key": api_key},
                     json={
-                        "contents": [{"parts": [{"text": prompt}]}],
+                        "contents": [{"parts": parts}],
                         "generationConfig": {"maxOutputTokens": max_tokens},
                     },
                 )
@@ -433,6 +447,7 @@ class AllamPlaceholderAdapter:
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: AttachmentInput | None = None,
     ) -> CompletionResult:
         raise RuntimeError("ALLaM provider is not yet available")
 

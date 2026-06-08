@@ -6,7 +6,8 @@ import type { Category } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { localizedName } from "@/lib/i18n/display";
 
 interface CategoryPickerProps {
   categories: Category[];
@@ -25,6 +26,9 @@ export function CategoryPicker({
   onSelect,
   onAutoDetectChange,
 }: CategoryPickerProps) {
+  const t = useTranslations();
+  const { locale } = useLocale();
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
@@ -32,9 +36,9 @@ export function CategoryPicker({
           <Wand2 className="h-4 w-4 text-accent" />
           <div>
             <Label htmlFor="auto-detect" className="text-sm font-medium cursor-pointer">
-              {ar.compare.autoDetect}
+              {t.compare.autoDetect}
             </Label>
-            <p className="text-xs text-muted-foreground mt-0.5">{ar.compare.autoDetectHint}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t.compare.autoDetectHint}</p>
           </div>
         </div>
         <Switch id="auto-detect" checked={autoDetect} onCheckedChange={onAutoDetectChange} />
@@ -56,13 +60,13 @@ export function CategoryPicker({
               autoDetect && detecting && "opacity-50 cursor-wait",
             )}
           >
-            {cat.name_ar}
+            {localizedName(cat, locale)}
           </button>
         ))}
         {detecting && (
           <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" />
-            جاري الاكتشاف...
+            {t.compare.detectingCategory}
           </span>
         )}
       </div>

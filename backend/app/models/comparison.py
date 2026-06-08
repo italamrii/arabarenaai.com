@@ -38,6 +38,11 @@ class Comparison(Base, TimestampMixin):
     category_confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3), nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    upload_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("uploads.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     targets: Mapped[list["ComparisonTarget"]] = relationship(

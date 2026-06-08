@@ -7,6 +7,7 @@ from app.models.prompt import Prompt
 from app.models.provider import Provider
 from app.models.response import ModelResponse
 from app.models.user import User
+from app.models.upload import Upload
 from app.models.vote import Vote
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "Prompt",
     "PromptCategory",
     "Provider",
+    "Upload",
     "User",
     "Vote",
 ]

@@ -17,6 +17,7 @@ import type {
   ProviderHealthData,
   ProviderHealthItem,
   SessionData,
+  UploadResult,
   Vote,
 } from "@/lib/api/types";
 
@@ -145,6 +146,26 @@ export const api = {
 
   getModel(id: string): Promise<Model> {
     return unwrap(client.get(`/models/${id}`));
+  },
+
+  async uploadAttachment(file: File): Promise<UploadResult> {
+    const sessionId = await this.ensureSession();
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await client.post<ApiEnvelope<UploadResult>>("/uploads", formData, {
+        headers: { "X-Session-Id": sessionId },
+      });
+      return readEnvelope(res).payload;
+    } catch (err) {
+      if (err instanceof ApiClientError) throw err;
+      throw new ApiClientError(
+        "UPLOAD_FAILED",
+        "تعذر رفع الملف",
+        "Upload failed",
+        0,
+      );
+    }
   },
 
   async createComparison(payload: CreateComparisonPayload): Promise<ComparisonCreated> {

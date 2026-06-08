@@ -15,12 +15,14 @@ import { CategoryPicker } from "@/components/categories/category-picker";
 import { CompareEmptyState } from "@/components/comparison/compare-empty-state";
 
 import { CompareGuide } from "@/components/comparison/compare-guide";
+import { AiContentNotice } from "@/components/legal/ai-content-notice";
 
 import { CompareStep } from "@/components/comparison/compare-step";
 
 import { CompareSubmitBar } from "@/components/comparison/compare-submit-bar";
 
 import { ModelPicker } from "@/components/comparison/model-picker";
+import { PromptAttachment } from "@/components/comparison/prompt-attachment";
 
 import { Container } from "@/components/layout/container";
 
@@ -42,15 +44,19 @@ import { useModels, useProviderHealth } from "@/hooks/use-models";
 
 import { useCreateComparison } from "@/hooks/use-comparison";
 
-import { ApiClientError } from "@/lib/api/client";
+import { api, ApiClientError } from "@/lib/api/client";
+import type { UploadResult } from "@/lib/api/types";
 
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { apiErrorMessage } from "@/lib/i18n/display";
 
 
 
 export default function ComparePage() {
 
   const router = useRouter();
+  const t = useTranslations();
+  const { locale } = useLocale();
 
   const [prompt, setPrompt] = useState("");
 
@@ -63,6 +69,12 @@ export default function ComparePage() {
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
 
   const [error, setError] = useState<string | null>(null);
+
+  const [attachment, setAttachment] = useState<UploadResult | null>(null);
+
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -120,6 +132,8 @@ export default function ComparePage() {
 
     const messages: Record<string, string> = {};
 
+    if (locale !== "ar") return messages;
+
     for (const provider of providerHealthProviders ?? []) {
 
       if (provider.status !== "healthy" && provider.message_ar) {
@@ -132,7 +146,7 @@ export default function ComparePage() {
 
     return messages;
 
-  }, [providerHealthProviders]);
+  }, [providerHealthProviders, locale]);
 
 
 
@@ -190,7 +204,15 @@ export default function ComparePage() {
 
   const trimmedPrompt = prompt.trim();
 
-  const hasPrompt = trimmedPrompt.length > 0;
+  const hasAttachment = !!attachment;
+
+  const hasPrompt = trimmedPrompt.length > 0 || hasAttachment;
+
+  const attachmentKind = attachment
+    ? attachment.mime_type === "application/pdf"
+      ? ("pdf" as const)
+      : ("image" as const)
+    : null;
 
   const hasEnoughModels = selectedModelIds.length >= minSelection;
 
@@ -198,25 +220,47 @@ export default function ComparePage() {
 
 
 
-  const isReady = hasPrompt && hasEnoughModels && hasCategory && !modelsError && !!models;
+  const isReady =
+    hasPrompt &&
+    hasEnoughModels &&
+    hasCategory &&
+    !modelsError &&
+    !!models &&
+    !uploadingAttachment;
 
 
 
   const statusMessage = useMemo(() => {
 
-    if (!hasPrompt) return ar.compare.needsPrompt;
+    if (!hasPrompt) return t.compare.needsPrompt;
 
-    if (modelsError) return ar.compare.modelsLoadError;
+    if (modelsError) return t.compare.modelsLoadError;
 
-    if (!hasEnoughModels) return ar.compare.needsModels;
+    if (!hasEnoughModels) return t.compare.needsModels;
 
-    if (!hasCategory) return ar.compare.needsCategory;
+    if (!hasCategory) return t.compare.needsCategory;
 
-    return ar.compare.readyToCompare;
+    return t.compare.readyToCompare;
 
-  }, [hasPrompt, hasEnoughModels, hasCategory, modelsError]);
+  }, [hasPrompt, hasEnoughModels, hasCategory, modelsError, t]);
 
 
+
+  async function handleSelectAttachment(file: File) {
+    setAttachmentError(null);
+    setUploadingAttachment(true);
+    try {
+      const uploaded = await api.uploadAttachment(file);
+      setAttachment(uploaded);
+    } catch (err) {
+      setAttachment(null);
+      setAttachmentError(
+        err instanceof ApiClientError ? apiErrorMessage(err, locale) : t.compare.attachment.uploadFailed,
+      );
+    } finally {
+      setUploadingAttachment(false);
+    }
+  }
 
   const handleSubmit = async (e?: React.FormEvent) => {
 
@@ -224,11 +268,14 @@ export default function ComparePage() {
 
     setError(null);
 
-
+    if (!trimmedPrompt && !attachment) {
+      setError(t.compare.needsPrompt);
+      return;
+    }
 
     if (!autoDetect && !categoryKey) {
 
-      setError(ar.compare.needsCategory);
+      setError(t.compare.needsCategory);
 
       return;
 
@@ -256,7 +303,7 @@ export default function ComparePage() {
 
     if (selectableModelIds.length < minSelection) {
 
-      setError(ar.compare.minModels);
+      setError(t.compare.minModels);
 
       return;
 
@@ -264,7 +311,7 @@ export default function ComparePage() {
 
     if (selectableModelIds.length > maxSelection) {
 
-      setError(ar.compare.maxModels);
+      setError(t.compare.maxModels);
 
       return;
 
@@ -281,6 +328,8 @@ export default function ComparePage() {
         category_mode: autoDetect ? ("auto" as const) : ("manual" as const),
 
         model_ids: selectableModelIds,
+
+        ...(attachment ? { attachment_id: attachment.id } : {}),
 
         ...(autoDetect
 
@@ -304,11 +353,11 @@ export default function ComparePage() {
 
       if (err instanceof ApiClientError) {
 
-        setError(err.messageAr);
+        setError(apiErrorMessage(err, locale));
 
       } else {
 
-        setError(ar.errors.generic);
+        setError(t.errors.generic);
 
       }
 
@@ -344,11 +393,10 @@ export default function ComparePage() {
 
       <Container className="py-10 sm:py-12 pb-32">
 
-        <PageHeader title={ar.compare.title} subtitle={ar.compare.subtitle} className="mb-6 sm:mb-8" />
+        <PageHeader title={t.compare.title} subtitle={t.compare.subtitle} className="mb-6 sm:mb-8" />
 
         <CompareGuide />
-
-
+        <AiContentNotice className="mb-2 max-w-4xl mx-auto" />
 
         <ErrorBoundary>
 
@@ -360,19 +408,30 @@ export default function ComparePage() {
 
             className="max-w-4xl mx-auto space-y-10 sm:space-y-12"
 
-            aria-label={ar.compare.title}
+            aria-label={t.compare.title}
 
           >
 
-            <CompareStep step={1} title={ar.compare.promptStep}>
+            <CompareStep step={1} title={t.compare.promptStep}>
 
               <div className="card-premium p-5 sm:p-8 space-y-4">
 
                 <Label htmlFor="prompt" className="section-label">
 
-                  {ar.compare.promptLabel}
+                  {t.compare.promptLabel}
 
                 </Label>
+
+                <PromptAttachment
+                  attachment={attachment}
+                  uploading={uploadingAttachment}
+                  error={attachmentError}
+                  onSelectFile={(file) => void handleSelectAttachment(file)}
+                  onRemove={() => {
+                    setAttachment(null);
+                    setAttachmentError(null);
+                  }}
+                />
 
                 <Textarea
 
@@ -382,11 +441,9 @@ export default function ComparePage() {
 
                   onChange={(e) => setPrompt(e.target.value)}
 
-                  placeholder={ar.compare.promptPlaceholder}
+                  placeholder={t.compare.promptPlaceholder}
 
                   maxLength={4000}
-
-                  required
 
                   dir="auto"
 
@@ -396,11 +453,11 @@ export default function ComparePage() {
 
                 />
 
-                {!hasPrompt ? (
+                {!trimmedPrompt && !hasAttachment ? (
 
                   <p className="text-xs text-muted-foreground/80" role="status">
 
-                    {ar.compare.emptyPrompt}
+                    {t.compare.emptyPrompt}
 
                   </p>
 
@@ -408,7 +465,7 @@ export default function ComparePage() {
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground gap-4">
 
-                  <span id="prompt-hint">{ar.compare.promptHint}</span>
+                  <span id="prompt-hint">{t.compare.promptHint}</span>
 
                   <span id="prompt-counter" className="tabular-nums shrink-0">
 
@@ -424,7 +481,7 @@ export default function ComparePage() {
 
 
 
-            <CompareStep step={2} title={ar.compare.categoryStep}>
+            <CompareStep step={2} title={t.compare.categoryStep}>
 
               <div className="card-premium p-5 sm:p-6">
 
@@ -436,7 +493,7 @@ export default function ComparePage() {
 
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
 
-                      {ar.compare.needsCategory}
+                      {t.compare.needsCategory}
 
                     </div>
 
@@ -486,9 +543,9 @@ export default function ComparePage() {
 
                   <CompareEmptyState
 
-                    title={ar.compare.needsCategory}
+                    title={t.compare.needsCategory}
 
-                    description={ar.errors.generic}
+                    description={t.errors.generic}
 
                     variant="error"
 
@@ -502,7 +559,7 @@ export default function ComparePage() {
 
 
 
-            <CompareStep step={3} title={ar.compare.modelsStep}>
+            <CompareStep step={3} title={t.compare.modelsStep}>
 
               <div className="card-premium p-5 sm:p-6 space-y-4">
 
@@ -514,7 +571,7 @@ export default function ComparePage() {
 
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
 
-                      {ar.compare.modelsLoading}
+                      {t.compare.modelsLoading}
 
                     </div>
 
@@ -532,7 +589,7 @@ export default function ComparePage() {
 
                   <CompareEmptyState
 
-                    title={ar.compare.modelsLoadError}
+                    title={t.compare.modelsLoadError}
 
                     variant="error"
 
@@ -558,6 +615,8 @@ export default function ComparePage() {
 
                     unavailableProviderMessages={unavailableProviderMessages}
 
+                    attachmentKind={attachmentKind}
+
                     onChange={setSelectedModelIds}
 
                   />
@@ -570,9 +629,9 @@ export default function ComparePage() {
 
                   <CompareEmptyState
 
-                    title={ar.compare.emptyModelsTitle}
+                    title={t.compare.emptyModelsTitle}
 
-                    description={ar.compare.emptyModelsDescription}
+                    description={t.compare.emptyModelsDescription}
 
                   />
 
@@ -622,7 +681,9 @@ export default function ComparePage() {
 
         statusMessage={statusMessage}
 
-        isSubmitting={createMutation.isPending}
+        isSubmitting={createMutation.isPending || uploadingAttachment}
+
+        hasAttachment={hasAttachment}
 
         onSubmit={() => handleSubmit()}
 

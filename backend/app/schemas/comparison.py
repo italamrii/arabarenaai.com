@@ -1,13 +1,14 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.common import CategoryResolved, ModelOut, ProviderRef
 
 
 class ComparisonCreateRequest(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=4000)
+    prompt: str = Field(default="", max_length=4000)
     category_mode: str = Field(..., pattern="^(manual|auto)$")
     category_key: str | None = None
     model_ids: list[str] = Field(..., min_length=2, max_length=10)
+    attachment_id: str | None = None
 
     @field_validator("model_ids")
     @classmethod
@@ -16,11 +17,26 @@ class ComparisonCreateRequest(BaseModel):
             raise ValueError("model_ids must be unique")
         return value
 
+    @model_validator(mode="after")
+    def prompt_or_attachment(self) -> "ComparisonCreateRequest":
+        if not self.prompt.strip() and not self.attachment_id:
+            raise ValueError("prompt or attachment_id is required")
+        return self
+
+
+class AttachmentRef(BaseModel):
+    id: str
+    url: str | None = None
+    mime_type: str | None = None
+    size: int | None = None
+    filename: str | None = None
+
 
 class PromptRef(BaseModel):
     id: str
     content: str | None = None
     char_count: int | None = None
+    attachment: AttachmentRef | None = None
 
 
 class TargetRef(BaseModel):

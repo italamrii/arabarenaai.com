@@ -7,20 +7,22 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { cn } from "@/lib/utils";
-import { ar } from "@/i18n/ar";
-
-const links = [
-  { href: "/", label: ar.nav.home },
-  { href: "/compare", label: ar.nav.compare },
-  { href: "/insights", label: ar.nav.insights },
-  { href: "/models", label: ar.nav.models },
-  { href: "/about", label: ar.nav.about },
-];
+import { useTranslations } from "@/i18n/locale-context";
 
 export function Header() {
+  const t = useTranslations();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const links = [
+    { href: "/", label: t.nav.home },
+    { href: "/compare", label: t.nav.compare },
+    { href: "/insights", label: t.nav.insights },
+    { href: "/models", label: t.nav.models },
+    { href: "/about", label: t.nav.about },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-xl">
@@ -30,7 +32,7 @@ export function Header() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 border border-accent/20 group-hover:glow-accent transition-shadow">
               <Sparkles className="h-4 w-4 text-accent" />
             </div>
-            <span className="font-semibold text-sm sm:text-base hidden sm:block">{ar.brand}</span>
+            <span className="font-semibold text-sm sm:text-base hidden sm:block">{t.brand}</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -50,9 +52,10 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-2">
+            <LanguageSwitcher compact />
             <Button asChild size="sm">
-              <Link href="/compare">{ar.home.cta}</Link>
+              <Link href="/compare">{t.home.cta}</Link>
             </Button>
           </div>
 
@@ -60,7 +63,7 @@ export function Header() {
             type="button"
             className="md:hidden p-2 rounded-lg hover:bg-muted"
             onClick={() => setOpen(!open)}
-            aria-label="القائمة"
+            aria-label={t.common.menuAria}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -83,9 +86,10 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
+            <LanguageSwitcher compact className="mt-1 self-start" />
             <Button asChild className="mt-2">
               <Link href="/compare" onClick={() => setOpen(false)}>
-                {ar.home.cta}
+                {t.home.cta}
               </Link>
             </Button>
           </nav>

@@ -5,7 +5,8 @@ import { AlertTriangle, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import type { ResponseItem } from "@/lib/api/types";
 import { cn, formatLatency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { localizedName, providerDisplayName } from "@/lib/i18n/display";
 
 interface ResponseCardProps {
   response: ResponseItem;
@@ -24,9 +25,12 @@ export function ResponseCard({
   selectable,
   onSelect,
 }: ResponseCardProps) {
+  const t = useTranslations();
+  const { locale } = useLocale();
   const isPending = response.status === "pending";
   const isError = response.status === "error" || response.status === "timeout";
   const isSuccess = response.status === "success";
+  const modelName = response.model ? localizedName(response.model, locale) : "—";
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (selectable && isSuccess && onSelect && (e.key === "Enter" || e.key === " ")) {
@@ -42,7 +46,7 @@ export function ResponseCard({
       aria-pressed={selectable && isSuccess ? selected : undefined}
       aria-label={
         selectable && isSuccess
-          ? `${response.model?.name_ar ?? "نموذج"} — ${selected ? "محدد" : "اضغط للاختيار"}`
+          ? `${modelName} — ${selected ? t.results.selected : t.results.clickToSelect}`
           : undefined
       }
       onClick={() => {
@@ -68,10 +72,10 @@ export function ResponseCard({
             {index + 1}
           </span>
           <div className="min-w-0">
-            <p className="font-semibold text-base truncate">{response.model?.name_ar ?? "—"}</p>
+            <p className="font-semibold text-base truncate">{modelName}</p>
             {response.model && (
               <Badge variant="secondary" className="mt-1.5 text-[11px]">
-                {response.model.provider.name_ar}
+                {providerDisplayName(response.model.provider, locale)}
               </Badge>
             )}
           </div>
@@ -80,7 +84,7 @@ export function ResponseCard({
           {isPending && <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />}
           {isError && <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden />}
           {selected && isSuccess && (
-            <CheckCircle2 className="h-5 w-5 text-accent" aria-label="محدد" />
+            <CheckCircle2 className="h-5 w-5 text-accent" aria-label={t.results.selected} />
           )}
         </div>
       </header>
@@ -88,7 +92,7 @@ export function ResponseCard({
       {isSuccess && response.response_time_ms != null && (
         <div className="flex items-center gap-1.5 px-5 py-2 text-xs text-muted-foreground border-b border-border/40 bg-muted/20">
           <Clock className="h-3 w-3" />
-          {ar.results.responseTime}: {formatLatency(response.response_time_ms)}
+          {t.results.responseTime}: {formatLatency(response.response_time_ms)}
         </div>
       )}
 
@@ -101,13 +105,13 @@ export function ResponseCard({
             <div className="h-3.5 bg-muted/80 rounded-md animate-pulse w-[65%]" />
             <p className="text-xs text-muted-foreground pt-2 flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin" />
-              {ar.results.waiting}
+              {t.results.waiting}
             </p>
           </div>
         )}
         {isError && (
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {response.error_message_ar ?? ar.results.errorResponse}
+            {(locale === "ar" && response.error_message_ar) || t.results.errorResponse}
           </p>
         )}
         {isSuccess && (
@@ -119,7 +123,7 @@ export function ResponseCard({
 
       {selectable && isSuccess && selected && (
         <footer className="border-t border-accent/20 bg-accent/5 px-5 py-2.5">
-          <p className="text-xs font-medium text-accent">{ar.results.voteSelected}</p>
+          <p className="text-xs font-medium text-accent">{t.results.voteSelected}</p>
         </footer>
       )}
     </article>

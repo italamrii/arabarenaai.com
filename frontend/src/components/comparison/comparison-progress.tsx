@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 import type { ResponseItem } from "@/lib/api/types";
 import { Progress } from "@/components/ui/progress";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 
 interface ComparisonProgressProps {
   responses: ResponseItem[];
@@ -12,6 +12,8 @@ interface ComparisonProgressProps {
 }
 
 export function ComparisonProgress({ responses, isRunning }: ComparisonProgressProps) {
+  const t = useTranslations();
+
   if (!isRunning) return null;
 
   const total = responses.length;
@@ -23,10 +25,10 @@ export function ComparisonProgress({ responses, isRunning }: ComparisonProgressP
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <Loader2 className="h-4 w-4 animate-spin text-accent" />
-          <p className="text-sm font-medium">{ar.results.loading}</p>
+          <p className="text-sm font-medium">{t.results.loading}</p>
         </div>
         <p className="text-sm text-muted-foreground tabular-nums">
-          {ar.results.loadingProgress
+          {t.results.loadingProgress
             .replace("{done}", String(done))
             .replace("{total}", String(total))}
         </p>

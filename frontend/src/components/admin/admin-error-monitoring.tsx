@@ -1,5 +1,7 @@
+"use client";
+
 import { AdminDashboardCard } from "@/components/admin/admin-dashboard-card";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 import type { SystemErrorItem } from "@/lib/admin/errors";
 
 interface AdminErrorMonitoringProps {
@@ -13,30 +15,31 @@ export function AdminErrorMonitoring({
   loading,
   diagnosticsAvailable,
 }: AdminErrorMonitoringProps) {
+  const t = useTranslations();
   const items = Array.isArray(errors) ? errors : [];
 
   return (
     <AdminDashboardCard
-      title={ar.admin.errorMonitoring.title}
+      title={t.admin.errorMonitoring.title}
       loading={loading}
       skeletonLines={4}
       className="sm:col-span-2 lg:col-span-3"
     >
       {!diagnosticsAvailable ? (
-        <p className="text-sm text-muted-foreground">{ar.admin.errorMonitoring.empty}</p>
+        <p className="text-sm text-muted-foreground">{t.admin.errorMonitoring.empty}</p>
       ) : items.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
                 <th className="py-2 pe-4 text-start font-medium">
-                  {ar.admin.errorMonitoring.source}
+                  {t.admin.errorMonitoring.source}
                 </th>
                 <th className="py-2 pe-4 text-start font-medium">
-                  {ar.admin.errorMonitoring.errorType}
+                  {t.admin.errorMonitoring.errorType}
                 </th>
                 <th className="py-2 text-start font-medium">
-                  {ar.admin.errorMonitoring.failures}
+                  {t.admin.errorMonitoring.failures}
                 </th>
               </tr>
             </thead>
@@ -52,7 +55,7 @@ export function AdminErrorMonitoring({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{ar.admin.errorMonitoring.noRecordedErrors}</p>
+        <p className="text-sm text-muted-foreground">{t.admin.errorMonitoring.noRecordedErrors}</p>
       )}
     </AdminDashboardCard>
   );

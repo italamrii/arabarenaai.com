@@ -90,6 +90,7 @@ class ProviderRegistry:
         model_key: str,
         max_tokens: int,
         timeout_ms: int,
+        attachment=None,
     ):
         if self._circuit_breaker.is_open(provider_key):
             from app.providers.errors import ProviderCallError, extract_provider_error
@@ -142,6 +143,7 @@ class ProviderRegistry:
                 model_key,
                 max_tokens=max_tokens,
                 timeout_ms=timeout_ms,
+                attachment=attachment,
             )
             self._circuit_breaker.record_success(provider_key)
             metrics.record_provider_success(provider_key, result.response_time_ms)

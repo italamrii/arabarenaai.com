@@ -105,6 +105,7 @@ class ComparisonRepository:
         category_source: str,
         category_confidence: float | None,
         model_ids: list[uuid.UUID],
+        upload_id: uuid.UUID | None = None,
     ) -> Comparison:
         comparison = Comparison(
             prompt_id=prompt.id,
@@ -114,6 +115,7 @@ class ComparisonRepository:
             category_confidence=category_confidence,
             status="pending",
             target_count=len(model_ids),
+            upload_id=upload_id,
         )
         self.db.add(comparison)
         self.db.flush()

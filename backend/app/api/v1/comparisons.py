@@ -69,6 +69,7 @@ async def create_comparison(
         category_key=body.category_key,
         model_ids=body.model_ids,
         session_id=session_id,
+        attachment_id=body.attachment_id,
     )
     category = CategoryRepository(db).get_by_id(comparison.category_id)
     models = ModelRepository(db).get_by_ids(

@@ -151,11 +151,20 @@ export interface CategoryDetectResult {
   fallback_used: boolean;
 }
 
+export interface UploadResult {
+  id: string;
+  url: string;
+  mime_type: string;
+  size: number;
+  filename: string;
+}
+
 export interface CreateComparisonPayload {
   prompt: string;
   category_mode: "manual" | "auto";
   category_key?: string;
   model_ids: string[];
+  attachment_id?: string;
 }
 
 export interface SessionData {

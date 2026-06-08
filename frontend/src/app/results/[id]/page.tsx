@@ -8,6 +8,7 @@ import { ComparisonProgress } from "@/components/comparison/comparison-progress"
 import { ResponseGrid } from "@/components/comparison/response-card";
 import { VotePanel } from "@/components/voting/vote-panel";
 import { DisclaimerBanner } from "@/components/analytics/disclaimer-banner";
+import { AiContentNotice } from "@/components/legal/ai-content-notice";
 import { Container } from "@/components/layout/container";
 import { ComparisonSkeleton } from "@/components/shared/loading-skeletons";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
@@ -16,13 +17,16 @@ import { Button } from "@/components/ui/button";
 import { useComparisonPoll } from "@/hooks/use-comparison-poll";
 import { useVote } from "@/hooks/use-vote";
 import { ApiClientError } from "@/lib/api/client";
-import { ar } from "@/i18n/ar";
+import { useLocale, useTranslations } from "@/i18n/locale-context";
+import { apiErrorMessage, localizedName } from "@/lib/i18n/display";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export default function ResultsPage({ params }: PageProps) {
+  const t = useTranslations();
+  const { locale } = useLocale();
   const { id } = use(params);
   const { data: comparison, isLoading, error } = useComparisonPoll(id);
   const voteMutation = useVote(id);
@@ -41,8 +45,9 @@ export default function ResultsPage({ params }: PageProps) {
 
   const selectedModelName = useMemo(() => {
     if (!comparison || !activeSelectionId) return null;
-    return comparison.responses.find((r) => r.id === activeSelectionId)?.model?.name_ar ?? null;
-  }, [comparison, activeSelectionId]);
+    const response = comparison.responses.find((r) => r.id === activeSelectionId);
+    return response?.model ? localizedName(response.model, locale) : null;
+  }, [comparison, activeSelectionId, locale]);
 
   const handleVote = async () => {
     if (!selectedResponseId) return;
@@ -52,7 +57,7 @@ export default function ResultsPage({ params }: PageProps) {
       setVoteSuccess(true);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setVoteError(err.messageAr);
+        setVoteError(apiErrorMessage(err, locale));
       }
     }
   };
@@ -68,9 +73,9 @@ export default function ResultsPage({ params }: PageProps) {
   if (error || !comparison) {
     return (
       <Container className="py-16 text-center">
-        <p className="text-muted-foreground">{ar.errors.generic}</p>
+        <p className="text-muted-foreground">{t.errors.generic}</p>
         <Button asChild variant="outline" className="mt-6">
-          <Link href="/compare">{ar.results.compareAgain}</Link>
+          <Link href="/compare">{t.results.compareAgain}</Link>
         </Button>
       </Container>
     );
@@ -86,14 +91,14 @@ export default function ResultsPage({ params }: PageProps) {
             <header className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {comparison.category.name_ar}
+                  {localizedName(comparison.category, locale)}
                 </Badge>
                 {comparison.status === "partial" && (
-                  <Badge variant="outline">{ar.results.partial}</Badge>
+                  <Badge variant="outline">{t.results.partial}</Badge>
                 )}
               </div>
               <div className="card-premium px-6 py-5">
-                <p className="section-label mb-3">{ar.compare.promptLabel}</p>
+                <p className="section-label mb-3">{t.compare.promptLabel}</p>
                 <p className="text-base sm:text-lg leading-relaxed text-foreground/95 whitespace-pre-wrap" dir="auto">
                   {comparison.prompt.content || (isRunning ? "..." : "")}
                 </p>
@@ -101,14 +106,15 @@ export default function ResultsPage({ params }: PageProps) {
             </header>
 
             <DisclaimerBanner />
+            <AiContentNotice className="mt-2" />
 
             {isRunning && <ComparisonProgress responses={comparison.responses} isRunning />}
 
             <section className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold">{ar.results.responsesHeading}</h2>
+                <h2 className="text-xl font-bold">{t.results.responsesHeading}</h2>
                 {canVote && !hasVoted && (
-                  <p className="text-sm text-muted-foreground mt-1.5">{ar.results.responsesHint}</p>
+                  <p className="text-sm text-muted-foreground mt-1.5">{t.results.responsesHint}</p>
                 )}
               </div>
 
@@ -150,12 +156,12 @@ export default function ResultsPage({ params }: PageProps) {
               <Button asChild variant="outline">
                 <Link href="/compare">
                   <RefreshCw className="h-4 w-4" />
-                  {ar.results.compareAgain}
+                  {t.results.compareAgain}
                 </Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/insights">
-                  {ar.results.viewInsights}
+                  {t.results.viewInsights}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>

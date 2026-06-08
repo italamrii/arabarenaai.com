@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from app.domain.attachments import AttachmentInput
 
 
 @dataclass
@@ -28,6 +31,7 @@ class ProviderAdapter(Protocol):
         *,
         max_tokens: int,
         timeout_ms: int,
+        attachment: "AttachmentInput | None" = None,
     ) -> CompletionResult: ...
 
     async def health_check(self) -> HealthResult: ...

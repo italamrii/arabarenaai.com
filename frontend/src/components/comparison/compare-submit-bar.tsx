@@ -4,7 +4,7 @@ import { Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 
 interface CompareSubmitBarProps {
   promptLength: number;
@@ -13,6 +13,7 @@ interface CompareSubmitBarProps {
   isReady: boolean;
   statusMessage: string;
   isSubmitting: boolean;
+  hasAttachment?: boolean;
   onSubmit: () => void;
 }
 
@@ -23,21 +24,32 @@ export function CompareSubmitBar({
   isReady,
   statusMessage,
   isSubmitting,
+  hasAttachment = false,
   onSubmit,
 }: CompareSubmitBarProps) {
+  const t = useTranslations();
+
   return (
     <div className="sticky-cta-bar">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-4 sm:px-6">
         <div className="hidden min-w-0 flex-1 sm:block">
           <p className="text-sm font-medium text-foreground truncate">
-            {isReady ? ar.compare.readyToCompare : statusMessage}
+            {isReady ? t.compare.readyToCompare : statusMessage}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {modelCount} / {maxModels} {ar.compare.selected}
-            {promptLength > 0 && (
-              <span className="mx-2 text-border">·</span>
-            )}
-            {promptLength > 0 && `${promptLength} حرف`}
+            {modelCount} / {maxModels} {t.compare.selected}
+            {promptLength > 0 ? (
+              <>
+                <span className="mx-2 text-border">·</span>
+                {`${promptLength} حرف`}
+              </>
+            ) : null}
+            {hasAttachment ? (
+              <>
+                <span className="mx-2 text-border">·</span>
+                مرفق
+              </>
+            ) : null}
           </p>
         </div>
 
@@ -54,12 +66,12 @@ export function CompareSubmitBar({
           {isSubmitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              {ar.compare.submitting}
+              {t.compare.submitting}
             </>
           ) : (
             <>
               <Sparkles className="h-5 w-5" />
-              {ar.compare.submit}
+              {t.compare.submit}
             </>
           )}
         </Button>

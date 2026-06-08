@@ -1,14 +1,18 @@
+"use client";
+
 import { Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { ar } from "@/i18n/ar";
+import { useTranslations } from "@/i18n/locale-context";
 
 interface DisclaimerBannerProps {
   message?: string;
   className?: string;
 }
 
-export function DisclaimerBanner({ message = ar.insights.disclaimer, className }: DisclaimerBannerProps) {
+export function DisclaimerBanner({ message, className }: DisclaimerBannerProps) {
+  const t = useTranslations();
+
   return (
     <div
       className={cn(
@@ -17,7 +21,7 @@ export function DisclaimerBanner({ message = ar.insights.disclaimer, className }
       )}
     >
       <Info className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-      <p>{message}</p>
+      <p>{message ?? t.insights.disclaimer}</p>
     </div>
   );
 }

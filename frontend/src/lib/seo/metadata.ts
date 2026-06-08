@@ -9,16 +9,21 @@ export function getSiteUrl(): string {
   return configured.replace(/\/+$/, "");
 }
 
+import type { Locale } from "@/i18n/types";
+import { localeOpenGraph } from "@/i18n/index";
+
 interface PageMetadataOptions {
   title: string;
   description: string;
   path: string;
+  locale?: Locale;
 }
 
 export function createPageMetadata({
   title,
   description,
   path,
+  locale = "ar",
 }: PageMetadataOptions): Metadata {
   const siteUrl = getSiteUrl();
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
@@ -35,7 +40,7 @@ export function createPageMetadata({
       description,
       url,
       siteName: SITE_NAME,
-      locale: "ar_SA",
+      locale: localeOpenGraph(locale),
       type: "website",
     },
     twitter: {

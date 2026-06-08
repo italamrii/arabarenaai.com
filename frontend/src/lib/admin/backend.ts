@@ -1,4 +1,6 @@
 import { getApiBaseUrl } from "@/lib/api/base-url";
+import type { AdminStatsData } from "@/lib/admin/admin-stats";
+import type { Model } from "@/lib/api/types";
 
 interface ApiEnvelope<T> {
   data?: T;
@@ -25,6 +27,11 @@ function safeModelCount(payload: { models?: unknown } | null): number | null {
   return payload.models.length;
 }
 
+function safeModelList(payload: { models?: unknown } | null): Model[] | null {
+  if (!payload || !Array.isArray(payload.models)) return null;
+  return payload.models as Model[];
+}
+
 function safeProviderList<T>(
   payload: { providers?: unknown } | null,
 ): T[] | null {
@@ -36,10 +43,12 @@ export interface AdminDashboardBackendData {
   health: { status: string; version: string } | null;
   totalModels: number | null;
   enabledModels: number | null;
+  models: Model[] | null;
   providerHealth: Array<{
     key: string;
     name_ar: string;
     status: string;
+    latency_ms?: number | null;
     message_ar?: string | null;
   }> | null;
   comparisons: {
@@ -61,6 +70,7 @@ export interface AdminDashboardBackendData {
     last_error_type: string | null;
     failures: number;
   }> | null;
+  adminStats: AdminStatsData | null;
   diagnosticsAvailable: boolean;
 }
 
@@ -68,10 +78,12 @@ const EMPTY_DASHBOARD_DATA: AdminDashboardBackendData = {
   health: null,
   totalModels: null,
   enabledModels: null,
+  models: null,
   providerHealth: null,
   comparisons: null,
   deployment: null,
   providerErrors: null,
+  adminStats: null,
   diagnosticsAvailable: false,
 };
 
@@ -144,7 +156,7 @@ function buildDiagnosticsFields(
 
 export async function loadAdminDashboardData(): Promise<AdminDashboardBackendData> {
   try {
-    const [health, allModels, enabledModels, providerHealth, diagnostics] =
+    const [health, allModels, enabledModels, providerHealth, diagnostics, adminStats] =
       await Promise.all([
         fetchEnvelope<{ status: string; version: string }>("/health"),
         fetchEnvelope<{ models: unknown[] }>("/models?enabled_only=false"),
@@ -154,6 +166,7 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardBackendDat
             key: string;
             name_ar: string;
             status: string;
+            latency_ms?: number | null;
             message_ar?: string | null;
           }>;
         }>("/health/providers"),
@@ -176,6 +189,7 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardBackendDat
           }>;
           database: { status?: string };
         }>("/health/diagnostics"),
+        fetchEnvelope<AdminStatsData>("/health/admin-stats"),
       ]);
 
     const diagnosticsFields = buildDiagnosticsFields(diagnostics);
@@ -184,7 +198,9 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardBackendDat
       health,
       totalModels: safeModelCount(allModels),
       enabledModels: safeModelCount(enabledModels),
+      models: safeModelList(allModels),
       providerHealth: safeProviderList(providerHealth),
+      adminStats,
       ...diagnosticsFields,
     };
   } catch {

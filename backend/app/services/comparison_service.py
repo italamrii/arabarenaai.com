@@ -20,7 +20,9 @@ from app.repositories.comparison_repo import ComparisonRepository, ModelReposito
 from app.observability.logging_config import log_event, log_exception_event
 from app.observability.metrics import get_metrics
 from app.providers.errors import ProviderCallError, ProviderErrorDetails, extract_provider_error
+from app.services.attachment_resolver import IMAGE_UNSUPPORTED_AR, resolve_for_provider
 from app.services.category_service import CategoryService, ResolvedCategory
+from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
 
@@ -39,17 +41,23 @@ class ComparisonService:
         self.model_repo = ModelRepository(db)
         self.category_service = CategoryService(db, settings)
 
-    def _enforce_spending_limits(self, *, prompt: str, model_count: int) -> str:
+    def _enforce_spending_limits(
+        self,
+        *,
+        prompt: str,
+        model_count: int,
+        has_attachment: bool = False,
+    ) -> str:
         """Reject comparisons that exceed env-configured spending limits."""
         trimmed = prompt.strip()
-        if not trimmed:
+        if not trimmed and not has_attachment:
             raise ValidationAppError(
-                message="النص مطلوب",
-                message_en="Prompt is required",
+                message="النص أو المرفق مطلوب",
+                message_en="Prompt or attachment is required",
             )
 
         max_chars = self.settings.max_prompt_chars
-        if len(trimmed) > max_chars:
+        if trimmed and len(trimmed) > max_chars:
             raise ValidationAppError(
                 message=f"النص يتجاوز {max_chars} حرفاً",
                 message_en="Prompt too long",
@@ -84,8 +92,18 @@ class ComparisonService:
         category_key: str | None,
         model_ids: list[str],
         session_id: str,
+        attachment_id: str | None = None,
     ) -> Comparison:
-        trimmed = self._enforce_spending_limits(prompt=prompt, model_count=len(model_ids))
+        upload_uuid: uuid.UUID | None = None
+        if attachment_id:
+            upload_uuid = self._parse_uuid(attachment_id, "attachment_id")
+            UploadService(self.db, self.settings).get_upload(upload_uuid, session_id=session_id)
+
+        trimmed = self._enforce_spending_limits(
+            prompt=prompt,
+            model_count=len(model_ids),
+            has_attachment=upload_uuid is not None,
+        )
 
         parsed_ids = [self._parse_uuid(mid, "model_ids") for mid in model_ids]
         models = self.model_repo.get_by_ids(parsed_ids)
@@ -99,13 +117,15 @@ class ComparisonService:
         for model in models:
             self._validate_model(model)
 
+        category_prompt = trimmed or "تحليل المرفق المرفوع"
         resolved = await self.category_service.resolve_for_comparison(
             category_mode=category_mode,
             category_key=category_key,
-            prompt=trimmed,
+            prompt=category_prompt,
         )
 
-        prompt_row = self.comparison_repo.get_or_create_prompt(trimmed)
+        stored_prompt = trimmed or (f"[attachment:{upload_uuid}]" if upload_uuid else "")
+        prompt_row = self.comparison_repo.get_or_create_prompt(stored_prompt)
         comparison = self.comparison_repo.create_comparison(
             prompt=prompt_row,
             category_id=resolved.category.id,
@@ -113,6 +133,7 @@ class ComparisonService:
             category_source=resolved.source,
             category_confidence=resolved.confidence,
             model_ids=parsed_ids,
+            upload_id=upload_uuid,
         )
         comparison.status = "running"
         self.db.commit()
@@ -158,10 +179,17 @@ class ComparisonService:
                 )
                 return
 
+            attachment_input = None
+            if comparison.upload_id:
+                attachment_input = UploadService(db, self.settings).load_attachment(
+                    comparison.upload_id
+                )
+
             try:
                 self._enforce_spending_limits(
                     prompt=prompt_row.content,
                     model_count=len(comparison.targets),
+                    has_attachment=attachment_input is not None,
                 )
             except ValidationAppError as exc:
                 log_event(
@@ -195,7 +223,9 @@ class ComparisonService:
                         model_id=str(response.model_id),
                     )
                     continue
-                tasks.append(self._infer_one(prompt_row.content, model, response.id))
+                tasks.append(
+                    self._infer_one(prompt_row.content, model, response.id, attachment_input)
+                )
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -241,6 +271,7 @@ class ComparisonService:
         prompt: str,
         model: AIModel,
         response_id: uuid.UUID,
+        attachment_input,
     ) -> tuple[uuid.UUID, dict]:
         provider_key = model.provider.key
         adapter = self.providers.get(provider_key)
@@ -280,13 +311,31 @@ class ComparisonService:
             )
             return response_id, self._error_payload(details)
 
+        resolved = resolve_for_provider(
+            prompt=prompt,
+            attachment=attachment_input,
+            provider_key=provider_key,
+        )
+        if resolved.unsupported_image:
+            details = ProviderErrorDetails(
+                error_code="attachment_unsupported",
+                error_message_debug="Model does not support image attachments",
+                provider_key=provider_key,
+                model_key=model.key,
+                exception_class="AttachmentUnsupported",
+            )
+            payload = self._error_payload(details)
+            payload["error_message"] = IMAGE_UNSUPPORTED_AR
+            return response_id, payload
+
         try:
             result = await self.providers.run_inference(
                 provider_key=provider_key,
-                prompt=prompt,
+                prompt=resolved.prompt,
                 model_key=model.key,
                 max_tokens=capped_max_tokens,
                 timeout_ms=model.timeout_ms,
+                attachment=resolved.attachment,
             )
             return response_id, {
                 "content": result.content,
