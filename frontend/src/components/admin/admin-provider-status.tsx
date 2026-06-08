@@ -43,9 +43,7 @@ export function AdminProviderStatus({
       skeletonLines={7}
       className="sm:col-span-2 lg:col-span-3"
     >
-      {!providerHealthAvailable ? (
-        <p className="text-sm text-muted-foreground">{t.admin.loadFailed}</p>
-      ) : items.length > 0 ? (
+      {items.length > 0 ? (
         <ul className="grid gap-2 sm:grid-cols-2">
           {items.map((provider) => (
             <li
@@ -72,6 +70,8 @@ export function AdminProviderStatus({
             </li>
           ))}
         </ul>
+      ) : !providerHealthAvailable ? (
+        <p className="text-sm text-muted-foreground">{t.admin.loadFailed}</p>
       ) : (
         <p className="text-sm text-muted-foreground">{t.admin.noDataYet}</p>
       )}

@@ -1,23 +1,116 @@
-import { getApiBaseUrl } from "@/lib/api/base-url";
+import { getApiBaseUrl, normalizeApiBaseUrl } from "@/lib/api/base-url";
 import type { AdminStatsData } from "@/lib/admin/admin-stats";
 import type { Model } from "@/lib/api/types";
+
+const PRODUCTION_API_BASE_URL = "https://api.arabarenaai.com/v1";
+const ADMIN_FETCH_LOG_PREFIX = "[admin-dashboard-fetch]";
 
 interface ApiEnvelope<T> {
   data?: T;
 }
 
+function isProductionRuntime(): boolean {
+  const vercelEnv = process.env.VERCEL_ENV?.trim().toLowerCase();
+  if (vercelEnv === "production") return true;
+  if (vercelEnv === "preview" || vercelEnv === "development") return false;
+  return process.env.NODE_ENV?.trim().toLowerCase() === "production";
+}
+
+/** Server-side API base for admin loader (not used by public compare client). */
+export function resolveAdminApiBaseUrl(): string {
+  const fromEnv =
+    process.env.API_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_URL?.trim();
+
+  if (fromEnv) {
+    return normalizeApiBaseUrl(fromEnv);
+  }
+
+  if (isProductionRuntime()) {
+    return PRODUCTION_API_BASE_URL;
+  }
+
+  return getApiBaseUrl();
+}
+
+function logAdminFetchFailure(
+  path: string,
+  details: {
+    apiBaseUrl: string;
+    status?: number;
+    reason: string;
+    bodyPreview?: string;
+    errorMessage?: string;
+  },
+): void {
+  console.error(ADMIN_FETCH_LOG_PREFIX, {
+    path,
+    apiBaseUrl: details.apiBaseUrl,
+    status: details.status,
+    reason: details.reason,
+    bodyPreview: details.bodyPreview,
+    errorMessage: details.errorMessage,
+  });
+}
+
+function previewBody(text: string): string {
+  return text.length > 200 ? `${text.slice(0, 200)}…` : text;
+}
+
 async function fetchEnvelope<T>(path: string): Promise<T | null> {
+  const apiBaseUrl = resolveAdminApiBaseUrl();
+  const url = `${apiBaseUrl}${path}`;
+
   try {
-    const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    const response = await fetch(url, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });
-    if (!response.ok) return null;
 
-    const json = (await response.json()) as ApiEnvelope<T>;
-    if (json.data == null) return null;
+    const bodyText = await response.text();
+
+    if (!response.ok) {
+      logAdminFetchFailure(path, {
+        apiBaseUrl,
+        status: response.status,
+        reason: "http_error",
+        bodyPreview: previewBody(bodyText),
+      });
+      return null;
+    }
+
+    let json: ApiEnvelope<T>;
+    try {
+      json = JSON.parse(bodyText) as ApiEnvelope<T>;
+    } catch (error) {
+      logAdminFetchFailure(path, {
+        apiBaseUrl,
+        status: response.status,
+        reason: "json_parse_error",
+        errorMessage: error instanceof Error ? error.message : String(error),
+        bodyPreview: previewBody(bodyText),
+      });
+      return null;
+    }
+
+    if (json.data == null) {
+      logAdminFetchFailure(path, {
+        apiBaseUrl,
+        status: response.status,
+        reason: "missing_data_envelope",
+        bodyPreview: previewBody(bodyText),
+      });
+      return null;
+    }
+
     return json.data;
-  } catch {
+  } catch (error) {
+    logAdminFetchFailure(path, {
+      apiBaseUrl,
+      reason: "fetch_exception",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
