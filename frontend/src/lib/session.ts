@@ -3,8 +3,12 @@ const SESSION_KEY = "ab_session_id";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/** Signed token: {uuid}.{expires_unix}.{hmac_hex} */
+const SIGNED_SESSION_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.\d+\.[0-9a-f]{64}$/i;
+
 export function isValidSessionId(sessionId: string): boolean {
-  return UUID_RE.test(sessionId);
+  return SIGNED_SESSION_RE.test(sessionId);
 }
 
 export function getSessionId(): string | null {
@@ -27,5 +31,13 @@ export function ensureSessionId(): string | null {
   if (sessionId && isValidSessionId(sessionId)) {
     return sessionId;
   }
+  if (sessionId) {
+    clearSessionId();
+  }
   return null;
+}
+
+/** @deprecated Legacy plain UUID sessions are no longer accepted. */
+export function isLegacySessionId(sessionId: string): boolean {
+  return UUID_RE.test(sessionId) && !sessionId.includes(".");
 }

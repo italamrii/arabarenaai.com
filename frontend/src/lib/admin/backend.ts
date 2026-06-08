@@ -1,3 +1,4 @@
+import { adminBackendHeaders } from "@/lib/admin/api-secret";
 import { getApiBaseUrl, normalizeApiBaseUrl } from "@/lib/api/base-url";
 import type { AdminStatsData } from "@/lib/admin/admin-stats";
 import type { Model } from "@/lib/api/types";
@@ -65,7 +66,7 @@ async function fetchEnvelope<T>(path: string): Promise<T | null> {
   try {
     const response = await fetch(url, {
       cache: "no-store",
-      headers: { Accept: "application/json" },
+      headers: adminBackendHeaders(),
     });
 
     const bodyText = await response.text();

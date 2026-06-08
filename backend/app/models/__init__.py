@@ -9,6 +9,7 @@ from app.models.response import ModelResponse
 from app.models.user import User
 from app.models.upload import Upload
 from app.models.vote import Vote
+from app.models.platform_setting import PlatformSetting
 
 __all__ = [
     "Agent",
@@ -23,4 +24,5 @@ __all__ = [
     "Upload",
     "User",
     "Vote",
+    "PlatformSetting",
 ]

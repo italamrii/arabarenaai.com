@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 UPLOADS_SQL_PATH = BACKEND_ROOT / "scripts" / "add_uploads.sql"
+PLATFORM_SETTINGS_SQL_PATH = BACKEND_ROOT / "scripts" / "add_platform_settings.sql"
 
 CLAUDE_TARGET_KEY = "claude-sonnet-4-6"
 CLAUDE_LEGACY_KEYS = (
@@ -127,11 +128,33 @@ def _patch_uploads_schema(db: Session) -> None:
     )
 
 
+def _patch_platform_settings_schema(db: Session) -> None:
+    sql_path = PLATFORM_SETTINGS_SQL_PATH
+    if not sql_path.is_file():
+        raise FileNotFoundError(f"Platform settings SQL not found: {sql_path}")
+
+    bind = db.get_bind()
+    existed = inspect(bind).has_table("platform_settings")
+
+    for stmt in _parse_sql_file(sql_path):
+        db.execute(text(stmt))
+    db.commit()
+
+    log_event(
+        logger,
+        "startup.patch.platform_settings.applied",
+        existed_before=existed,
+        exists_after=inspect(bind).has_table("platform_settings"),
+        sql_path=str(sql_path),
+    )
+
+
 def apply_startup_patches() -> None:
     db = SessionLocal()
     try:
         log_event(logger, "startup.patches.begin")
         _patch_uploads_schema(db)
+        _patch_platform_settings_schema(db)
         _patch_claude_model_key(db)
         log_event(logger, "startup.patches.complete")
     except Exception as exc:

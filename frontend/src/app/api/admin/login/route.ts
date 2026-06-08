@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { checkAdminLoginRateLimit, resetAdminLoginRateLimit } from "@/lib/admin/rate-limit";
 import {
   ADMIN_SESSION_COOKIE,
   adminSessionCookieOptions,
@@ -8,9 +9,23 @@ import {
   verifyAdminPassword,
 } from "@/lib/admin/session";
 
+function clientKey(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
+  return request.headers.get("x-real-ip") || "unknown";
+}
+
 export async function POST(request: Request) {
   if (!isAdminConfigured()) {
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
+  }
+
+  const rateLimit = checkAdminLoginRateLimit(clientKey(request));
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", retry_after_seconds: rateLimit.retryAfterSeconds },
+      { status: 429 },
+    );
   }
 
   let password = "";
@@ -24,6 +39,8 @@ export async function POST(request: Request) {
   if (!verifyAdminPassword(password)) {
     return NextResponse.json({ error: "invalid" }, { status: 401 });
   }
+
+  resetAdminLoginRateLimit(clientKey(request));
 
   const token = await createAdminSessionToken();
   if (!token) {

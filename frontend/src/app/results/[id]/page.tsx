@@ -14,7 +14,7 @@ import { ComparisonSkeleton } from "@/components/shared/loading-skeletons";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useComparisonPoll } from "@/hooks/use-comparison-poll";
+import { ComparisonPollTimeoutError, useComparisonPoll } from "@/hooks/use-comparison-poll";
 import { useVote } from "@/hooks/use-vote";
 import { ApiClientError } from "@/lib/api/client";
 import { useLocale, useTranslations } from "@/i18n/locale-context";
@@ -66,6 +66,18 @@ export default function ResultsPage({ params }: PageProps) {
     return (
       <Container className="py-10 pb-28">
         <ComparisonSkeleton />
+      </Container>
+    );
+  }
+
+  if (error instanceof ComparisonPollTimeoutError) {
+    return (
+      <Container className="py-16 text-center space-y-4">
+        <p className="text-muted-foreground">{t.results.pollTimeout}</p>
+        <p className="text-sm text-muted-foreground">{t.results.pollTimeoutHint}</p>
+        <Button asChild variant="outline" className="mt-2">
+          <Link href="/compare">{t.results.compareAgain}</Link>
+        </Button>
       </Container>
     );
   }

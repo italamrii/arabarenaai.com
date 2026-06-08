@@ -1,6 +1,6 @@
 import packageJson from "../../../package.json";
 
-import { getApiBaseUrl } from "@/lib/api/base-url";
+import { resolveAdminApiBaseUrl } from "@/lib/admin/backend";
 
 export interface SystemOverview {
   applicationVersion: string | null;
@@ -70,7 +70,7 @@ export function loadSystemOverview(backendVersion: string | null | undefined): S
 
     let apiBaseUrl: string | null = null;
     try {
-      apiBaseUrl = getApiBaseUrl();
+      apiBaseUrl = resolveAdminApiBaseUrl();
     } catch {
       apiBaseUrl = null;
     }

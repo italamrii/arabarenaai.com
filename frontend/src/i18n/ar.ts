@@ -118,6 +118,8 @@ export const ar = {
     selected: "محدد",
     clickToSelect: "اضغط للاختيار",
     voteSuccess: "شكرًا — تم تسجيل تفضيلك",
+    pollTimeout: "استغرقت المقارنة وقتاً أطول من المتوقع ولم تكتمل.",
+    pollTimeoutHint: "قد يكون أحد المزودين بطيئاً أو غير متاح. يمكنك المحاولة مرة أخرى.",
     alreadyVoted: "لقد سجّلت تفضيلك مسبقًا",
     responseTime: "زمن الاستجابة",
     errorResponse: "تعذر الحصول على رد",
@@ -476,6 +478,22 @@ export const ar = {
       title: "تواصل معنا",
       description: "تواصل مع ArabArenaAI للاستفسارات العامة والتجارية.",
     },
+    insights: {
+      title: "إشارات تفضيل المجتمع",
+      description: "استكشف إشارات تفضيل المجتمع لنماذج الذكاء الاصطناعي باللغة العربية على ArabArenaAI.",
+    },
+    models: {
+      title: "النماذج المتاحة",
+      description: "تعرّف على نماذج الذكاء الاصطناعي المتاحة للمقارنة بالعربية على ArabArenaAI.",
+    },
+  },
+  maintenance: {
+    title: "صيانة المنصة",
+    defaultMessage:
+      "نقوم حالياً بأعمال صيانة وتحسينات على المنصة. سنعود قريباً.",
+    defaultMessageEn: "We are performing maintenance and improvements. We will be back soon.",
+    defaultReturn: "قريباً",
+    estimatedReturn: "العودة المتوقعة",
   },
   admin: {
     title: "لوحة الإدارة",
@@ -529,6 +547,16 @@ export const ar = {
       today: "اليوم",
       images: "صور",
       pdfs: "PDF",
+    },
+    systemControls: {
+      title: "ضوابط النظام",
+      maintenanceMode: "وضع الصيانة",
+      maintenanceHint: "عند التفعيل، يرى الزوار صفحة صيانة ولا يمكنهم استخدام المنصة.",
+      status: "الحالة",
+      on: "مفعّل",
+      off: "متوقف",
+      loadFailed: "تعذر تحميل إعدادات الصيانة",
+      saveFailed: "تعذر حفظ إعدادات الصيانة",
     },
     systemOverview: {
       title: "نظرة عامة على النظام",

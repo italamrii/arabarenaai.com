@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.config import get_settings
 from app.core.dependencies import DbSession, RequestId, rate_limit_category_detect
+from app.core.maintenance import require_platform_available
 from app.schemas.category import CategoryDetectData, CategoryDetectRequest, CategoryListData
 from app.schemas.common import CategoryOut, Envelope, to_meta
 from app.services.category_service import CategoryService
@@ -36,6 +37,7 @@ async def detect_category(
     db: DbSession,
     request_id: RequestId,
     _session: Annotated[str, Depends(rate_limit_category_detect)],
+    _platform: Annotated[None, Depends(require_platform_available)],
 ) -> Envelope[CategoryDetectData]:
     service = CategoryService(db, settings)
     resolved = await service.detect_category(body.prompt)

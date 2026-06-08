@@ -119,6 +119,8 @@ export const en = {
     selected: "Selected",
     clickToSelect: "Click to select",
     voteSuccess: "Thank you — your preference has been recorded",
+    pollTimeout: "This comparison took longer than expected and did not complete.",
+    pollTimeoutHint: "A provider may be slow or unavailable. You can try again.",
     alreadyVoted: "You have already recorded your preference",
     responseTime: "Response time",
     errorResponse: "Could not get a response",
@@ -479,6 +481,21 @@ export const en = {
       title: "Contact Us",
       description: "Contact ArabArenaAI for general and business inquiries.",
     },
+    insights: {
+      title: "Community Preference Insights",
+      description: "Explore community preference signals for Arabic AI models on ArabArenaAI.",
+    },
+    models: {
+      title: "Available Models",
+      description: "Browse AI models available for Arabic comparison on ArabArenaAI.",
+    },
+  },
+  maintenance: {
+    title: "Platform Maintenance",
+    defaultMessage: "We are performing maintenance and improvements. We will be back soon.",
+    defaultMessageEn: "We are performing maintenance and improvements. We will be back soon.",
+    defaultReturn: "Soon",
+    estimatedReturn: "Expected return",
   },
   admin: {
     title: "Admin Dashboard",
@@ -532,6 +549,16 @@ export const en = {
       today: "Today",
       images: "Images",
       pdfs: "PDF",
+    },
+    systemControls: {
+      title: "System Controls",
+      maintenanceMode: "Maintenance mode",
+      maintenanceHint: "When enabled, visitors see a maintenance page and cannot use the platform.",
+      status: "Status",
+      on: "ON",
+      off: "OFF",
+      loadFailed: "Could not load maintenance settings",
+      saveFailed: "Could not save maintenance settings",
     },
     systemOverview: {
       title: "System Overview",

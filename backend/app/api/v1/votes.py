@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import DbSession, OptionalSessionId, RequestId, rate_limit_votes
+from app.core.maintenance import require_platform_available
 from app.core.exceptions import NotFoundAppError
 from app.schemas.common import Envelope, to_meta
 from app.schemas.vote import VoteCreateRequest, VoteMeData, VoteOut
@@ -22,6 +23,7 @@ def cast_vote(
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_votes)],
+    _platform: Annotated[None, Depends(require_platform_available)],
 ) -> Envelope[VoteOut]:
     service = VoteService(db)
     try:

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from contextlib import asynccontextmanager
@@ -17,7 +18,9 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 
 from app.core.config import get_settings, reload_settings
+from app.core.database import SessionLocal
 from app.core.startup_patches import apply_startup_patches
+from app.services.comparison_watchdog import sweep_stuck_comparisons
 
 from app.core.exceptions import AppError, error_response
 
@@ -57,6 +60,27 @@ async def lifespan(_app: FastAPI):
 
     apply_startup_patches()
 
+    db = SessionLocal()
+    try:
+        swept = sweep_stuck_comparisons(db, settings)
+        if swept:
+            log_event(logger, "app.startup.watchdog_sweep", swept=swept)
+    finally:
+        db.close()
+
+    async def _watchdog_loop() -> None:
+        while True:
+            await asyncio.sleep(300)
+            sweep_db = SessionLocal()
+            try:
+                sweep_stuck_comparisons(sweep_db, get_settings())
+            except Exception:
+                logger.exception("comparison.watchdog.loop_failed")
+            finally:
+                sweep_db.close()
+
+    watchdog_task = asyncio.create_task(_watchdog_loop())
+
     log_event(
 
         logger,
@@ -89,6 +113,12 @@ async def lifespan(_app: FastAPI):
 
     yield
 
+    watchdog_task.cancel()
+    try:
+        await watchdog_task
+    except asyncio.CancelledError:
+        pass
+
     log_event(logger, "app.stopped")
 
 
@@ -99,14 +129,17 @@ settings = get_settings()
 
 
 
+_docs_kwargs = (
+    {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    if settings.is_production
+    else {}
+)
+
 app = FastAPI(
-
     title="Arab Benchmark AI API",
-
     version=settings.app_version,
-
     lifespan=lifespan,
-
+    **_docs_kwargs,
 )
 
 

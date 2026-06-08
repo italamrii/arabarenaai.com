@@ -8,12 +8,15 @@ from typing import Any
 
 
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from sqlalchemy import text
 
 
 
+from app.core.admin_auth import require_admin_access
 from app.core.database import engine
 
 from app.core.dependencies import AppSettings, DbSession, ProviderRegistryDep, RequestId
@@ -83,13 +86,10 @@ def health_check(request_id: RequestId, settings: AppSettings) -> Envelope[Healt
 @router.get("/env-debug")
 
 def env_debug(
-
     request_id: RequestId,
-
     settings: AppSettings,
-
     registry: ProviderRegistryDep,
-
+    _admin: Annotated[None, Depends(require_admin_access)],
 ) -> Envelope[EnvDebugData]:
 
     """Temporary: verify .env loading without exposing secrets."""
@@ -196,7 +196,11 @@ async def providers_health(
 
 
 @router.get("/admin-stats")
-def admin_stats(db: DbSession, request_id: RequestId) -> Envelope[AdminStatsData]:
+def admin_stats(
+    db: DbSession,
+    request_id: RequestId,
+    _admin: Annotated[None, Depends(require_admin_access)],
+) -> Envelope[AdminStatsData]:
     """DB-backed operational stats for the admin dashboard (no PII)."""
     service = AdminStatsService(db)
     return Envelope(data=service.get_stats(), meta=to_meta(request_id))
@@ -206,6 +210,7 @@ def admin_stats(db: DbSession, request_id: RequestId) -> Envelope[AdminStatsData
 def reset_circuit_breakers(
     request_id: RequestId,
     registry: ProviderRegistryDep,
+    _admin: Annotated[None, Depends(require_admin_access)],
 ) -> Envelope[CircuitBreakerResetOut]:
     """Clear in-memory provider circuit breaker state (all providers)."""
     states = registry.reset_circuit_breakers()
@@ -327,13 +332,10 @@ async def _check_database() -> dict[str, Any]:
 @router.get("/diagnostics")
 
 async def health_diagnostics(
-
     request_id: RequestId,
-
     settings: AppSettings,
-
     registry: ProviderRegistryDep,
-
+    _admin: Annotated[None, Depends(require_admin_access)],
 ) -> Envelope[DiagnosticsData]:
 
     """Operational snapshot: metrics, provider health, DB connectivity."""

@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.dependencies import DbSession, OptionalSessionId, RequestId, rate_limit_comparisons
+from app.core.maintenance import require_platform_available
 from app.providers.registry import get_provider_registry
 from app.repositories.comparison_repo import CategoryRepository, ModelRepository
 from app.schemas.common import Envelope, to_meta
@@ -37,6 +38,18 @@ async def _run_inference_task(comparison_id: uuid.UUID) -> None:
             exc,
             comparison_id=comparison_id_str,
         )
+        try:
+            from app.repositories.comparison_repo import ComparisonRepository
+
+            comparison = ComparisonRepository(db).get_by_id(comparison_id)
+            if comparison and comparison.status in ("pending", "running"):
+                ComparisonRepository(db).set_comparison_status(comparison, "failed")
+                db.commit()
+        except Exception:
+            logger.exception(
+                "comparison.inference.background_failed_status_update",
+                extra={"comparison_id": comparison_id_str},
+            )
     finally:
         db.close()
 
@@ -48,6 +61,7 @@ async def create_comparison(
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_comparisons)],
+    _platform: Annotated[None, Depends(require_platform_available)],
 ) -> Envelope[ComparisonCreatedOut]:
     settings = get_settings()
     service = ComparisonService(db, settings, get_provider_registry())

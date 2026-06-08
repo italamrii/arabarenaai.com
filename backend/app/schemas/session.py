@@ -6,6 +6,10 @@ class SessionOut(BaseModel):
     expires_at: str
 
 
+class LegacySessionUpgradeRequest(BaseModel):
+    legacy_session_id: str
+
+
 class HealthData(BaseModel):
     status: str
     version: str

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 const SITE_NAME = "ArabArenaAI";
-const DEFAULT_SITE_URL = "https://arabarenaai.com";
+const DEFAULT_SITE_URL = "https://www.arabarenaai.com";
 
 export function getSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -29,6 +29,8 @@ export function createPageMetadata({
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${siteUrl}${canonicalPath}`;
 
+  const ogImage = `${siteUrl}/og.svg`;
+
   return {
     title,
     description,
@@ -42,11 +44,13 @@ export function createPageMetadata({
       siteName: SITE_NAME,
       locale: localeOpenGraph(locale),
       type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: SITE_NAME }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
+      images: [ogImage],
     },
   };
 }
@@ -63,8 +67,10 @@ export const rootMetadata: Metadata = {
     siteName: SITE_NAME,
     locale: "ar_SA",
     type: "website",
+    images: [{ url: "/og.svg", width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: ["/og.svg"],
   },
 };

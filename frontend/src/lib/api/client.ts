@@ -1,7 +1,13 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 import { API_BASE_URL } from "@/lib/api/base-url";
-import { getSessionId, setSessionId, clearSessionId, isValidSessionId } from "@/lib/session";
+import {
+  getSessionId,
+  setSessionId,
+  clearSessionId,
+  isValidSessionId,
+  isLegacySessionId,
+} from "@/lib/session";
 import type {
   ApiEnvelope,
   ApiErrorEnvelope,
@@ -103,6 +109,15 @@ export const api = {
     if (existing && isValidSessionId(existing)) {
       return existing;
     }
+    if (existing && isLegacySessionId(existing)) {
+      const upgraded = await unwrap(
+        client.post<ApiEnvelope<SessionData>>("/sessions/upgrade", {
+          legacy_session_id: existing,
+        }),
+      );
+      setSessionId(upgraded.session_id);
+      return upgraded.session_id;
+    }
     if (existing) {
       clearSessionId();
     }
@@ -178,7 +193,8 @@ export const api = {
     );
   },
 
-  getComparison(id: string): Promise<Comparison> {
+  async getComparison(id: string): Promise<Comparison> {
+    await this.ensureSession();
     return unwrap(client.get(`/comparisons/${id}`));
   },
 

@@ -77,6 +77,36 @@ class RateLimitAppError(AppError):
         )
 
 
+class ForbiddenAppError(AppError):
+    def __init__(
+        self,
+        message: str = "غير مصرح بالوصول",
+        message_en: str = "Forbidden",
+        code: str = "FORBIDDEN",
+    ) -> None:
+        super().__init__(
+            code=code,
+            message=message,
+            message_en=message_en,
+            status_code=403,
+        )
+
+
+class UnauthorizedAppError(AppError):
+    def __init__(
+        self,
+        message: str = "غير مصرح",
+        message_en: str = "Unauthorized",
+        code: str = "UNAUTHORIZED",
+    ) -> None:
+        super().__init__(
+            code=code,
+            message=message,
+            message_en=message_en,
+            status_code=401,
+        )
+
+
 class ProviderUnavailableAppError(AppError):
     def __init__(self) -> None:
         super().__init__(

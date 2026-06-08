@@ -1,5 +1,6 @@
 import uuid
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictAppError, NotFoundAppError, UnprocessableAppError
@@ -58,14 +59,22 @@ class VoteService:
                 message_en=message,
             ) from exc
 
-        vote = self.vote_repo.create(
-            comparison_id=comparison_id,
-            response_id=response_id,
-            session_id=session_id,
-        )
-        self.db.commit()
-        self.db.refresh(vote)
-        return vote
+        try:
+            vote = self.vote_repo.create(
+                comparison_id=comparison_id,
+                response_id=response_id,
+                session_id=session_id,
+            )
+            self.db.commit()
+            self.db.refresh(vote)
+            return vote
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise ConflictAppError(
+                code="VOTE_ALREADY_CAST",
+                message="لقد قمت بالتصويت مسبقاً على هذه المقارنة",
+                message_en="Vote already cast for this comparison",
+            ) from exc
 
     def get_my_vote(
         self,

@@ -1,11 +1,14 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.core.config import get_settings
-from app.core.dependencies import DbSession, RequestId, rate_limit_comparisons
+from app.core.dependencies import DbSession, OptionalSessionId, RequestId, rate_limit_comparisons
+from app.core.maintenance import require_platform_available
+from app.core.exceptions import ForbiddenAppError, NotFoundAppError
+from app.core.session_tokens import verify_admin_secret
 from app.schemas.common import Envelope, to_meta
 from app.schemas.upload import UploadOut
 from app.services.upload_service import UploadService
@@ -13,11 +16,17 @@ from app.services.upload_service import UploadService
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 
+def _is_admin_request(x_admin_secret: str | None) -> bool:
+    settings = get_settings()
+    return verify_admin_secret(x_admin_secret, settings.resolved_admin_api_secret)
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_upload(
     db: DbSession,
     request_id: RequestId,
     session_id: Annotated[str, Depends(rate_limit_comparisons)],
+    _platform: Annotated[None, Depends(require_platform_available)],
     file: UploadFile = File(...),
 ) -> Envelope[UploadOut]:
     settings = get_settings()
@@ -46,24 +55,34 @@ def get_upload_file(
     upload_id: str,
     db: DbSession,
     request_id: RequestId,
+    session_id: OptionalSessionId,
+    x_admin_secret: Annotated[str | None, Header(alias="X-Admin-Secret")] = None,
 ) -> FileResponse:
     settings = get_settings()
     service = UploadService(db, settings)
     try:
         parsed = uuid.UUID(upload_id)
     except ValueError as exc:
-        from app.core.exceptions import NotFoundAppError
-
         raise NotFoundAppError(
             message="الملف غير موجود",
             message_en="Upload not found",
         ) from exc
 
     row = service.get_upload(parsed)
+    if not _is_admin_request(x_admin_secret):
+        if not session_id:
+            raise ForbiddenAppError(
+                message="غير مصرح بتنزيل هذا الملف",
+                message_en="Session required to download this upload",
+            )
+        if row.session_id != session_id:
+            raise ForbiddenAppError(
+                message="غير مصرح بتنزيل هذا الملف",
+                message_en="You do not have access to this upload",
+            )
+
     path = settings.upload_dir_path / row.storage_key
     if not path.is_file():
-        from app.core.exceptions import NotFoundAppError
-
         raise NotFoundAppError(
             message="الملف غير موجود",
             message_en="Upload file missing",

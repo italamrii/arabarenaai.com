@@ -79,6 +79,10 @@ class Settings(BaseSettings):
 
     session_secret: str = "dev-secret-change-me"
 
+    admin_api_secret: str | None = None
+
+    app_env: str = "development"
+
     app_version: str = "1.0.0"
 
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
@@ -142,7 +146,11 @@ class Settings(BaseSettings):
 
     rate_limit_analytics_per_minute: int = 60
 
+    rate_limit_sessions_per_hour: int = 30
 
+    session_ttl_days: int = 30
+
+    comparison_running_timeout_minutes: int = 15
 
     log_level: str = "INFO"
 
@@ -232,6 +240,20 @@ class Settings(BaseSettings):
         if not path.is_absolute():
             path = BACKEND_ROOT / path
         return path
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() == "production"
+
+    @property
+    def resolved_admin_api_secret(self) -> str | None:
+        if self.admin_api_secret and self.admin_api_secret.strip():
+            return self.admin_api_secret.strip()
+        if self.is_production and self.session_secret and self.session_secret != "dev-secret-change-me":
+            return self.session_secret
+        if not self.is_production:
+            return self.session_secret
+        return None
 
     @property
 

@@ -1,6 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, Query
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 
 from app.analytics.service import AnalyticsService
 from app.core.dependencies import DbSession, RequestId, rate_limit_analytics
@@ -14,7 +16,7 @@ router = APIRouter()
 def get_preferences(
     db: DbSession,
     request_id: RequestId,
-    _ip: str = rate_limit_analytics,
+    _ip: Annotated[str, Depends(rate_limit_analytics)],
     period: str = Query(default="all_time"),
     category_key: str | None = Query(default=None),
     category_id: str | None = Query(default=None),
@@ -39,7 +41,7 @@ def get_preferences(
 def get_preferences_summary(
     db: DbSession,
     request_id: RequestId,
-    _ip: str = rate_limit_analytics,
+    _ip: Annotated[str, Depends(rate_limit_analytics)],
     period: str = Query(default="all_time"),
 ) -> Envelope[PreferencesSummaryData]:
     service = AnalyticsService(db)
@@ -54,7 +56,7 @@ def get_model_preferences(
     model_id: str,
     db: DbSession,
     request_id: RequestId,
-    _ip: str = rate_limit_analytics,
+    _ip: Annotated[str, Depends(rate_limit_analytics)],
     period: str = Query(default="all_time"),
     category_key: str | None = Query(default=None),
 ) -> Envelope[ModelPreferenceData]:

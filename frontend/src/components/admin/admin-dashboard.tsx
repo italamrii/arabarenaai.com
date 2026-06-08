@@ -9,6 +9,7 @@ import { AdminDashboardErrorBoundary } from "@/components/admin/admin-dashboard-
 import { AdminErrorMonitoring } from "@/components/admin/admin-error-monitoring";
 import { AdminExecutionErrors } from "@/components/admin/admin-execution-errors";
 import { AdminProviderStatus } from "@/components/admin/admin-provider-status";
+import { AdminSystemControls } from "@/components/admin/admin-system-controls";
 import { AdminSystemOverview } from "@/components/admin/admin-system-overview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,15 @@ export function AdminDashboard() {
           </Button>
         </div>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{t.admin.systemControls.title}</h2>
+        <AdminDashboardErrorBoundary>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <AdminSystemControls />
+          </div>
+        </AdminDashboardErrorBoundary>
+      </section>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">{t.admin.systemOverview.title}</h2>
